@@ -1,59 +1,33 @@
-# MOBA Analyzer
+# ProMenu (stage 1)
 
-แอพ Android วิเคราะห์เกม MOBA (ROV) แบบ real-time ด้วย OCR + AI
+ปุ่มวงกลมลอย + แผงเมนูแบบสัมผัส สำหรับ GTA SA Android 2.10 (arm64, AML)
 
-## Phase ปัจจุบัน: Phase 1 — Screen Reader
+**สถานะ: ยังไม่เคยรันบนเครื่องจริง** โค้ดผ่านการตรวจ syntax และชื่อฟังก์ชันของเกมถูกเทียบกับไบนารีของ ARM CheatMenu เดิมแล้ว แต่ยังไม่ได้คอมไพล์ด้วย NDK และยังไม่ได้ทดสอบในเกม
 
-อ่านข้อมูลจากหน้าจออัตโนมัติ ไม่ต้องกรอกเอง:
-- ⏱ เวลาเกม (timer)
-- ⚔️ สกอร์รวม (kill score)
-- 🦸 ชื่อฮีโร่ที่ตรวจพบ
-- 💚 HP bars
-- 📊 KDA ของตัวเอง
-- 🗺️ Game phase (Early / Mid / Late)
+## คอมไพล์จากมือถือ (GitHub Actions)
+1. สร้าง repo ใหม่บน GitHub แล้วอัปโหลดทุกไฟล์ในโฟลเดอร์นี้ (รวมโฟลเดอร์ `.github`)
+2. แท็บ **Actions** → **Build ProMenu (arm64)** → **Run workflow**
+3. รอจนเสร็จ → ดาวน์โหลด artifact `libProMenu64`
+4. ถ้าไม่ผ่าน ให้ส่ง log บรรทัดที่ขึ้น `error:` มา
 
-## โครงสร้าง
+## ติดตั้ง
+1. ย้าย `libCheatMenu64.so` เดิมออกจากโฟลเดอร์ `mods` ก่อน (สองตัวแย่ง hook เดียวกัน อยู่ด้วยกันไม่ได้)
+2. วาง `libProMenu64.so` ใน `Android/data/com.rockstargames.gtasa/mods/`
+3. เปิดเกม จะเห็นปุ่มวงกลมสีฟ้าที่ขอบจอขวา
 
-```
-app/src/main/java/com/mobaanalyzer/
-├── MainActivity.kt              ← Permission flow + UI
-├── model/
-│   └── GameState.kt            ← Data model ทุก field ของเกม
-├── ocr/
-│   ├── GameScreenReader.kt     ← ML Kit OCR engine
-│   └── GameStateParser.kt      ← แปลง raw text → GameState
-├── service/
-│   ├── ScreenCaptureService.kt ← MediaProjection จับหน้าจอทุก 2s
-│   ├── OverlayService.kt       ← Floating window ทับเกม
-│   └── KeepAliveService.kt     ← WakeLock + AlarmManager guard
-├── data/
-│   └── AppState.kt             ← Shared state ระหว่าง services
-└── receiver/
-    ├── BootReceiver.kt         ← Start หลัง reboot
-    └── AlarmReceiver.kt        ← Backup restart ทุก 15 นาที
-```
+## วิธีใช้
+- แตะปุ่มวงกลม = เปิด/ปิดเมนู (ปุ่ม X สีแดงในเมนูก็ปิดได้)
+- ลากปุ่มไปไหนก็ได้ ปล่อยแล้วมันจะเกาะขอบจอซ้ายหรือขวา
+- ถ้าไม่ได้แตะ 3 วินาที ปุ่มจะหดครึ่งหนึ่งเข้าขอบจอและจางลง แตะอีกครั้งก็กลับมา
+- แท็บ Settings ปรับความโปร่งใสและขนาดปุ่มได้ (ลดโปร่งใสต่ำสุด 15% = เกือบซ่อน แต่ยังแตะได้)
+- ลากนิ้วในรายการเพื่อเลื่อนหน้า
+- แท็บ Settings แสดง Game state และจำนวนโค้ดที่หาเจอ ใช้ดูตอนมีปัญหา
 
-## Permission ที่ต้องอนุญาต
+## ฟอนต์
+ใช้ `files/ProMenu/font.ttf` ถ้ามี ไม่งั้นใช้ `files/ARM/CheatMenu/Font/MyFont.ttf` (Arial จากแพ็กเดิม) ไม่งั้นใช้ฟอนต์ในตัว
 
-1. **Overlay Permission** (Display over other apps) — แสดงผลทับเกม
-2. **Notification Permission** (Android 13+)
-3. **Screen Capture** (MediaProjection) — จับภาพหน้าจอ
+## ที่มาของข้อมูล
+Hook, ชื่อฟังก์ชัน, รูปแบบ vertex และ render state ทั้งหมดอ่านจากไบนารี `libCheatMenu64.so` ของ ARM โดยตรง ไม่ได้เดา ส่วนที่ยังไม่ยืนยันคือการคอมไพล์กับ header ของ AML เวอร์ชันล่าสุดและพฤติกรรมจริงในเกม
 
-## วิธี Build
-
-### GitHub Actions (แนะนำ)
-Push ไป `main` → GitHub จะ build APK ให้อัตโนมัติ  
-ดาวน์โหลด APK ได้จาก Actions tab → Artifacts
-
-### Local
-```bash
-./gradlew assembleDebug
-# APK อยู่ที่: app/build/outputs/apk/debug/app-debug.apk
-```
-
-## Roadmap
-
-- [x] **Phase 1** — Screen Reader (OCR อ่านหน้าจออัตโนมัติ)
-- [ ] **Phase 2** — Game State Parser (parse HP, minimap position)
-- [ ] **Phase 3** — AI Analysis Engine (hero counter-pick DB + strategy)
-- [ ] **Phase 4** — Overlay UI (real-time tips + alerts)
+## Log
+ดูด้วย logcat tag `ProMenu`
