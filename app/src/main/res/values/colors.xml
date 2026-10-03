@@ -10,4 +10,5 @@
     <color name="bg_dark">#FF121212</color>
     <color name="accent_green">#FF1D9E75</color>
     <color name="accent_yellow">#FFFFDD44</color>
+    <color name="ic_launcher_background">#FF121212</color>
 </resources>

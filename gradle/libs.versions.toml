@@ -9,7 +9,6 @@ cardview     = "1.0.0"
 localbroadcastmanager = "1.1.0"
 coroutines   = "1.7.3"
 mlkitTextRecognition = "16.0.1"
-mlkitTextRecognitionThai = "16.0.1"
 
 [libraries]
 androidx-core-ktx        = { group = "androidx.core",           name = "core-ktx",                 version.ref = "coreKtx" }
@@ -20,7 +19,6 @@ androidx-cardview         = { group = "androidx.cardview",       name = "cardvie
 androidx-localbroadcastmanager = { group = "androidx.localbroadcastmanager", name = "localbroadcastmanager", version.ref = "localbroadcastmanager" }
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 mlkit-text-recognition    = { group = "com.google.mlkit",       name = "text-recognition",         version.ref = "mlkitTextRecognition" }
-mlkit-text-recognition-thai = { group = "com.google.mlkit",     name = "text-recognition-thai",    version.ref = "mlkitTextRecognitionThai" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
