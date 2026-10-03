@@ -113,6 +113,7 @@ class StrategyEngine(private val rules: GameRules = GameRules()) {
             Role.MAGE -> "ใช้สกิลระยะไกลสร้างแรงกดดัน อยู่หลังแทงค์"
             Role.TANK, Role.SUPPORT -> "ตามประกบแครี่ ปักวิชั่นรอบ objective"
             Role.FIGHTER -> "คุมเลนและดันป้อม แล้วรวมทีมตอน objective"
+            Role.UNKNOWN -> return emptyList()
         }
         return listOf(Tip(30, text))
     }

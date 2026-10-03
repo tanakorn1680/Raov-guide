@@ -1,48 +1,698 @@
 {
-  "version": 1,
-  "verified": false,
-  "note": "Seed roster written from general knowledge, NOT checked against the current ROV patch. Edit freely: add heroes, fix role/damage/tags, add Thai names to aliases.",
-  "heroes": [
-    {"id":"nakroth","name":"Nakroth","aliases":[],"role":"ASSASSIN","lanes":["JUNGLE"],"damage":"PHYSICAL","tags":["burst","mobile"]},
-    {"id":"butterfly","name":"Butterfly","aliases":[],"role":"ASSASSIN","lanes":["JUNGLE"],"damage":"PHYSICAL","tags":["burst","mobile"]},
-    {"id":"murad","name":"Murad","aliases":[],"role":"ASSASSIN","lanes":["JUNGLE","MID"],"damage":"PHYSICAL","tags":["burst","mobile"]},
-    {"id":"quillen","name":"Quillen","aliases":[],"role":"ASSASSIN","lanes":["JUNGLE"],"damage":"PHYSICAL","tags":["burst"]},
-    {"id":"zephys","name":"Zephys","aliases":[],"role":"ASSASSIN","lanes":["JUNGLE"],"damage":"PHYSICAL","tags":["burst","mobile"]},
-    {"id":"zill","name":"Zill","aliases":[],"role":"ASSASSIN","lanes":["JUNGLE","MID"],"damage":"MAGIC","tags":["burst"]},
-    {"id":"ryoma","name":"Ryoma","aliases":[],"role":"FIGHTER","lanes":["DARK_SLAYER"],"damage":"PHYSICAL","tags":["tanky"]},
-    {"id":"arthur","name":"Arthur","aliases":[],"role":"FIGHTER","lanes":["DARK_SLAYER"],"damage":"PHYSICAL","tags":["tanky"]},
-    {"id":"zanis","name":"Zanis","aliases":[],"role":"FIGHTER","lanes":["DARK_SLAYER"],"damage":"PHYSICAL","tags":["mobile"]},
-    {"id":"florentino","name":"Florentino","aliases":[],"role":"FIGHTER","lanes":["DARK_SLAYER"],"damage":"PHYSICAL","tags":["mobile"]},
-    {"id":"taara","name":"Taara","aliases":[],"role":"FIGHTER","lanes":["DARK_SLAYER"],"damage":"PHYSICAL","tags":["tanky"]},
-    {"id":"lubu","name":"Lu Bu","aliases":["LuBu"],"role":"FIGHTER","lanes":["DARK_SLAYER"],"damage":"PHYSICAL","tags":["tanky"]},
-    {"id":"ilumia","name":"Ilumia","aliases":[],"role":"MAGE","lanes":["MID"],"damage":"MAGIC","tags":["poke"]},
-    {"id":"natalya","name":"Natalya","aliases":[],"role":"MAGE","lanes":["MID"],"damage":"MAGIC","tags":["burst"]},
-    {"id":"lauriel","name":"Lauriel","aliases":[],"role":"MAGE","lanes":["MID","DARK_SLAYER"],"damage":"MAGIC","tags":["burst","mobile"]},
-    {"id":"aleister","name":"Aleister","aliases":[],"role":"MAGE","lanes":["MID"],"damage":"MAGIC","tags":["poke","cc"]},
-    {"id":"liliana","name":"Liliana","aliases":[],"role":"MAGE","lanes":["MID","JUNGLE"],"damage":"MAGIC","tags":["burst","mobile"]},
-    {"id":"raz","name":"Raz","aliases":[],"role":"MAGE","lanes":["MID","JUNGLE"],"damage":"MAGIC","tags":["burst","cc"]},
-    {"id":"tulen","name":"Tulen","aliases":[],"role":"MAGE","lanes":["MID"],"damage":"MAGIC","tags":["burst"]},
-    {"id":"lorion","name":"Lorion","aliases":[],"role":"MAGE","lanes":["MID"],"damage":"MAGIC","tags":["poke"]},
-    {"id":"diaochan","name":"Diaochan","aliases":[],"role":"MAGE","lanes":["MID"],"damage":"MAGIC","tags":["burst","mobile"]},
-    {"id":"krixi","name":"Krixi","aliases":[],"role":"MAGE","lanes":["MID"],"damage":"MAGIC","tags":["poke"]},
-    {"id":"veera","name":"Veera","aliases":[],"role":"MAGE","lanes":["MID"],"damage":"MAGIC","tags":["poke","burst"]},
-    {"id":"violet","name":"Violet","aliases":[],"role":"CARRY","lanes":["ABYSSAL"],"damage":"PHYSICAL","tags":["poke"]},
-    {"id":"yorn","name":"Yorn","aliases":[],"role":"CARRY","lanes":["ABYSSAL"],"damage":"PHYSICAL","tags":["poke","mobile"]},
-    {"id":"lindis","name":"Lindis","aliases":[],"role":"CARRY","lanes":["ABYSSAL"],"damage":"PHYSICAL","tags":["poke"]},
-    {"id":"telannas","name":"Tel'Annas","aliases":["Telannas"],"role":"CARRY","lanes":["ABYSSAL"],"damage":"PHYSICAL","tags":["poke"]},
-    {"id":"capheny","name":"Capheny","aliases":[],"role":"CARRY","lanes":["ABYSSAL"],"damage":"PHYSICAL","tags":["poke"]},
-    {"id":"slimz","name":"Slimz","aliases":[],"role":"CARRY","lanes":["ABYSSAL"],"damage":"PHYSICAL","tags":["poke"]},
-    {"id":"moren","name":"Moren","aliases":[],"role":"CARRY","lanes":["ABYSSAL"],"damage":"PHYSICAL","tags":["poke"]},
-    {"id":"fennik","name":"Fennik","aliases":[],"role":"CARRY","lanes":["ABYSSAL"],"damage":"PHYSICAL","tags":["poke"]},
-    {"id":"hayate","name":"Hayate","aliases":[],"role":"CARRY","lanes":["ABYSSAL"],"damage":"PHYSICAL","tags":["poke"]},
-    {"id":"elsu","name":"Elsu","aliases":[],"role":"CARRY","lanes":["ABYSSAL"],"damage":"PHYSICAL","tags":["poke"]},
-    {"id":"valhein","name":"Valhein","aliases":[],"role":"CARRY","lanes":["ABYSSAL","DARK_SLAYER"],"damage":"PHYSICAL","tags":["burst","mobile"]},
-    {"id":"alice","name":"Alice","aliases":[],"role":"SUPPORT","lanes":["SUPPORT"],"damage":"MAGIC","tags":["heal"]},
-    {"id":"arum","name":"Arum","aliases":[],"role":"SUPPORT","lanes":["SUPPORT"],"damage":"MAGIC","tags":["heal"]},
-    {"id":"grakk","name":"Grakk","aliases":[],"role":"TANK","lanes":["SUPPORT"],"damage":"PHYSICAL","tags":["tanky","cc"]},
-    {"id":"ormarr","name":"Ormarr","aliases":[],"role":"TANK","lanes":["SUPPORT","DARK_SLAYER"],"damage":"PHYSICAL","tags":["tanky","cc"]},
-    {"id":"peura","name":"Peura","aliases":[],"role":"TANK","lanes":["SUPPORT"],"damage":"PHYSICAL","tags":["tanky","cc"]},
-    {"id":"thane","name":"Thane","aliases":[],"role":"TANK","lanes":["SUPPORT"],"damage":"PHYSICAL","tags":["tanky","cc"]},
-    {"id":"maloch","name":"Maloch","aliases":[],"role":"TANK","lanes":["SUPPORT"],"damage":"PHYSICAL","tags":["tanky","cc"]}
-  ]
+ "version": 1,
+ "verified": false,
+ "note": "Seed roster, NOT verified against the current ROV patch (game has 129 heroes). role UNKNOWN = name only. Optional per-hero fields: counters / weakTo (lists of hero ids) feed the pick advisor.",
+ "heroes": [
+  {
+   "id": "nakroth",
+   "name": "Nakroth",
+   "aliases": [],
+   "role": "ASSASSIN",
+   "lanes": [
+    "JUNGLE"
+   ],
+   "damage": "PHYSICAL",
+   "tags": [
+    "burst",
+    "mobile"
+   ]
+  },
+  {
+   "id": "butterfly",
+   "name": "Butterfly",
+   "aliases": [],
+   "role": "ASSASSIN",
+   "lanes": [
+    "JUNGLE"
+   ],
+   "damage": "PHYSICAL",
+   "tags": [
+    "burst",
+    "mobile"
+   ]
+  },
+  {
+   "id": "murad",
+   "name": "Murad",
+   "aliases": [],
+   "role": "ASSASSIN",
+   "lanes": [
+    "JUNGLE",
+    "MID"
+   ],
+   "damage": "PHYSICAL",
+   "tags": [
+    "burst",
+    "mobile"
+   ]
+  },
+  {
+   "id": "quillen",
+   "name": "Quillen",
+   "aliases": [],
+   "role": "ASSASSIN",
+   "lanes": [
+    "JUNGLE"
+   ],
+   "damage": "PHYSICAL",
+   "tags": [
+    "burst"
+   ]
+  },
+  {
+   "id": "zephys",
+   "name": "Zephys",
+   "aliases": [],
+   "role": "ASSASSIN",
+   "lanes": [
+    "JUNGLE"
+   ],
+   "damage": "PHYSICAL",
+   "tags": [
+    "burst",
+    "mobile"
+   ]
+  },
+  {
+   "id": "zill",
+   "name": "Zill",
+   "aliases": [],
+   "role": "ASSASSIN",
+   "lanes": [
+    "JUNGLE",
+    "MID"
+   ],
+   "damage": "MAGIC",
+   "tags": [
+    "burst"
+   ]
+  },
+  {
+   "id": "ryoma",
+   "name": "Ryoma",
+   "aliases": [],
+   "role": "FIGHTER",
+   "lanes": [
+    "DARK_SLAYER"
+   ],
+   "damage": "PHYSICAL",
+   "tags": [
+    "tanky"
+   ]
+  },
+  {
+   "id": "arthur",
+   "name": "Arthur",
+   "aliases": [],
+   "role": "FIGHTER",
+   "lanes": [
+    "DARK_SLAYER"
+   ],
+   "damage": "PHYSICAL",
+   "tags": [
+    "tanky"
+   ]
+  },
+  {
+   "id": "zanis",
+   "name": "Zanis",
+   "aliases": [],
+   "role": "FIGHTER",
+   "lanes": [
+    "DARK_SLAYER"
+   ],
+   "damage": "PHYSICAL",
+   "tags": [
+    "mobile"
+   ]
+  },
+  {
+   "id": "florentino",
+   "name": "Florentino",
+   "aliases": [],
+   "role": "FIGHTER",
+   "lanes": [
+    "DARK_SLAYER"
+   ],
+   "damage": "PHYSICAL",
+   "tags": [
+    "mobile"
+   ]
+  },
+  {
+   "id": "taara",
+   "name": "Taara",
+   "aliases": [],
+   "role": "FIGHTER",
+   "lanes": [
+    "DARK_SLAYER"
+   ],
+   "damage": "PHYSICAL",
+   "tags": [
+    "tanky"
+   ]
+  },
+  {
+   "id": "lubu",
+   "name": "Lu Bu",
+   "aliases": [
+    "LuBu"
+   ],
+   "role": "FIGHTER",
+   "lanes": [
+    "DARK_SLAYER"
+   ],
+   "damage": "PHYSICAL",
+   "tags": [
+    "tanky"
+   ]
+  },
+  {
+   "id": "ilumia",
+   "name": "Ilumia",
+   "aliases": [],
+   "role": "MAGE",
+   "lanes": [
+    "MID"
+   ],
+   "damage": "MAGIC",
+   "tags": [
+    "poke"
+   ]
+  },
+  {
+   "id": "natalya",
+   "name": "Natalya",
+   "aliases": [],
+   "role": "MAGE",
+   "lanes": [
+    "MID"
+   ],
+   "damage": "MAGIC",
+   "tags": [
+    "burst"
+   ]
+  },
+  {
+   "id": "lauriel",
+   "name": "Lauriel",
+   "aliases": [],
+   "role": "MAGE",
+   "lanes": [
+    "MID",
+    "DARK_SLAYER"
+   ],
+   "damage": "MAGIC",
+   "tags": [
+    "burst",
+    "mobile"
+   ]
+  },
+  {
+   "id": "aleister",
+   "name": "Aleister",
+   "aliases": [],
+   "role": "MAGE",
+   "lanes": [
+    "MID"
+   ],
+   "damage": "MAGIC",
+   "tags": [
+    "poke",
+    "cc"
+   ]
+  },
+  {
+   "id": "liliana",
+   "name": "Liliana",
+   "aliases": [],
+   "role": "MAGE",
+   "lanes": [
+    "MID",
+    "JUNGLE"
+   ],
+   "damage": "MAGIC",
+   "tags": [
+    "burst",
+    "mobile"
+   ]
+  },
+  {
+   "id": "raz",
+   "name": "Raz",
+   "aliases": [],
+   "role": "MAGE",
+   "lanes": [
+    "MID",
+    "JUNGLE"
+   ],
+   "damage": "MAGIC",
+   "tags": [
+    "burst",
+    "cc"
+   ]
+  },
+  {
+   "id": "tulen",
+   "name": "Tulen",
+   "aliases": [],
+   "role": "MAGE",
+   "lanes": [
+    "MID"
+   ],
+   "damage": "MAGIC",
+   "tags": [
+    "burst"
+   ]
+  },
+  {
+   "id": "lorion",
+   "name": "Lorion",
+   "aliases": [],
+   "role": "MAGE",
+   "lanes": [
+    "MID"
+   ],
+   "damage": "MAGIC",
+   "tags": [
+    "poke"
+   ]
+  },
+  {
+   "id": "diaochan",
+   "name": "Diaochan",
+   "aliases": [],
+   "role": "MAGE",
+   "lanes": [
+    "MID"
+   ],
+   "damage": "MAGIC",
+   "tags": [
+    "burst",
+    "mobile"
+   ]
+  },
+  {
+   "id": "krixi",
+   "name": "Krixi",
+   "aliases": [],
+   "role": "MAGE",
+   "lanes": [
+    "MID"
+   ],
+   "damage": "MAGIC",
+   "tags": [
+    "poke"
+   ]
+  },
+  {
+   "id": "veera",
+   "name": "Veera",
+   "aliases": [],
+   "role": "MAGE",
+   "lanes": [
+    "MID"
+   ],
+   "damage": "MAGIC",
+   "tags": [
+    "poke",
+    "burst"
+   ]
+  },
+  {
+   "id": "violet",
+   "name": "Violet",
+   "aliases": [],
+   "role": "CARRY",
+   "lanes": [
+    "ABYSSAL"
+   ],
+   "damage": "PHYSICAL",
+   "tags": [
+    "poke"
+   ]
+  },
+  {
+   "id": "yorn",
+   "name": "Yorn",
+   "aliases": [],
+   "role": "CARRY",
+   "lanes": [
+    "ABYSSAL"
+   ],
+   "damage": "PHYSICAL",
+   "tags": [
+    "poke",
+    "mobile"
+   ]
+  },
+  {
+   "id": "lindis",
+   "name": "Lindis",
+   "aliases": [],
+   "role": "CARRY",
+   "lanes": [
+    "ABYSSAL"
+   ],
+   "damage": "PHYSICAL",
+   "tags": [
+    "poke"
+   ]
+  },
+  {
+   "id": "telannas",
+   "name": "Tel'Annas",
+   "aliases": [
+    "Telannas"
+   ],
+   "role": "CARRY",
+   "lanes": [
+    "ABYSSAL"
+   ],
+   "damage": "PHYSICAL",
+   "tags": [
+    "poke"
+   ]
+  },
+  {
+   "id": "capheny",
+   "name": "Capheny",
+   "aliases": [],
+   "role": "CARRY",
+   "lanes": [
+    "ABYSSAL"
+   ],
+   "damage": "PHYSICAL",
+   "tags": [
+    "poke"
+   ]
+  },
+  {
+   "id": "slimz",
+   "name": "Slimz",
+   "aliases": [],
+   "role": "CARRY",
+   "lanes": [
+    "ABYSSAL"
+   ],
+   "damage": "PHYSICAL",
+   "tags": [
+    "poke"
+   ]
+  },
+  {
+   "id": "moren",
+   "name": "Moren",
+   "aliases": [],
+   "role": "CARRY",
+   "lanes": [
+    "ABYSSAL"
+   ],
+   "damage": "PHYSICAL",
+   "tags": [
+    "poke"
+   ]
+  },
+  {
+   "id": "fennik",
+   "name": "Fennik",
+   "aliases": [],
+   "role": "CARRY",
+   "lanes": [
+    "ABYSSAL"
+   ],
+   "damage": "PHYSICAL",
+   "tags": [
+    "poke"
+   ]
+  },
+  {
+   "id": "hayate",
+   "name": "Hayate",
+   "aliases": [],
+   "role": "CARRY",
+   "lanes": [
+    "ABYSSAL"
+   ],
+   "damage": "PHYSICAL",
+   "tags": [
+    "poke"
+   ]
+  },
+  {
+   "id": "elsu",
+   "name": "Elsu",
+   "aliases": [],
+   "role": "CARRY",
+   "lanes": [
+    "ABYSSAL"
+   ],
+   "damage": "PHYSICAL",
+   "tags": [
+    "poke"
+   ]
+  },
+  {
+   "id": "valhein",
+   "name": "Valhein",
+   "aliases": [],
+   "role": "CARRY",
+   "lanes": [
+    "ABYSSAL",
+    "DARK_SLAYER"
+   ],
+   "damage": "PHYSICAL",
+   "tags": [
+    "burst",
+    "mobile"
+   ]
+  },
+  {
+   "id": "alice",
+   "name": "Alice",
+   "aliases": [],
+   "role": "SUPPORT",
+   "lanes": [
+    "SUPPORT"
+   ],
+   "damage": "MAGIC",
+   "tags": [
+    "heal"
+   ]
+  },
+  {
+   "id": "arum",
+   "name": "Arum",
+   "aliases": [],
+   "role": "SUPPORT",
+   "lanes": [
+    "SUPPORT"
+   ],
+   "damage": "MAGIC",
+   "tags": [
+    "heal"
+   ]
+  },
+  {
+   "id": "grakk",
+   "name": "Grakk",
+   "aliases": [],
+   "role": "TANK",
+   "lanes": [
+    "SUPPORT"
+   ],
+   "damage": "PHYSICAL",
+   "tags": [
+    "tanky",
+    "cc"
+   ]
+  },
+  {
+   "id": "ormarr",
+   "name": "Ormarr",
+   "aliases": [],
+   "role": "TANK",
+   "lanes": [
+    "SUPPORT",
+    "DARK_SLAYER"
+   ],
+   "damage": "PHYSICAL",
+   "tags": [
+    "tanky",
+    "cc"
+   ]
+  },
+  {
+   "id": "peura",
+   "name": "Peura",
+   "aliases": [],
+   "role": "TANK",
+   "lanes": [
+    "SUPPORT"
+   ],
+   "damage": "PHYSICAL",
+   "tags": [
+    "tanky",
+    "cc"
+   ]
+  },
+  {
+   "id": "thane",
+   "name": "Thane",
+   "aliases": [],
+   "role": "TANK",
+   "lanes": [
+    "SUPPORT"
+   ],
+   "damage": "PHYSICAL",
+   "tags": [
+    "tanky",
+    "cc"
+   ]
+  },
+  {
+   "id": "maloch",
+   "name": "Maloch",
+   "aliases": [],
+   "role": "TANK",
+   "lanes": [
+    "SUPPORT"
+   ],
+   "damage": "PHYSICAL",
+   "tags": [
+    "tanky",
+    "cc"
+   ]
+  },
+  {
+   "id": "zuka",
+   "name": "Zuka",
+   "aliases": [],
+   "role": "FIGHTER",
+   "lanes": [
+    "DARK_SLAYER"
+   ],
+   "damage": "PHYSICAL",
+   "tags": []
+  },
+  {
+   "id": "astrid",
+   "name": "Astrid",
+   "aliases": [],
+   "role": "FIGHTER",
+   "lanes": [
+    "DARK_SLAYER"
+   ],
+   "damage": "PHYSICAL",
+   "tags": []
+  },
+  {
+   "id": "bright",
+   "name": "Bright",
+   "aliases": [],
+   "role": "ASSASSIN",
+   "lanes": [
+    "JUNGLE"
+   ],
+   "damage": "PHYSICAL",
+   "tags": []
+  },
+  {
+   "id": "paine",
+   "name": "Paine",
+   "aliases": [],
+   "role": "ASSASSIN",
+   "lanes": [
+    "MID",
+    "JUNGLE"
+   ],
+   "damage": "MIXED",
+   "tags": []
+  },
+  {
+   "id": "wukong",
+   "name": "WuKong",
+   "aliases": [
+    "Wukong"
+   ],
+   "role": "ASSASSIN",
+   "lanes": [
+    "JUNGLE"
+   ],
+   "damage": "PHYSICAL",
+   "tags": []
+  },
+  {
+   "id": "mortos",
+   "name": "Mortos",
+   "aliases": [],
+   "role": "UNKNOWN",
+   "lanes": [],
+   "damage": "MIXED",
+   "tags": []
+  },
+  {
+   "id": "darcy",
+   "name": "D'Arcy",
+   "aliases": [],
+   "role": "UNKNOWN",
+   "lanes": [],
+   "damage": "MIXED",
+   "tags": []
+  },
+  {
+   "id": "kaine",
+   "name": "Kaine",
+   "aliases": [],
+   "role": "UNKNOWN",
+   "lanes": [],
+   "damage": "MIXED",
+   "tags": []
+  },
+  {
+   "id": "elandorr",
+   "name": "Eland'orr",
+   "aliases": [],
+   "role": "UNKNOWN",
+   "lanes": [],
+   "damage": "MIXED",
+   "tags": []
+  },
+  {
+   "id": "flowborn",
+   "name": "Flowborn",
+   "aliases": [],
+   "role": "UNKNOWN",
+   "lanes": [],
+   "damage": "MIXED",
+   "tags": []
+  },
+  {
+   "id": "stuart",
+   "name": "Stuart",
+   "aliases": [],
+   "role": "UNKNOWN",
+   "lanes": [],
+   "damage": "MIXED",
+   "tags": []
+  },
+  {
+   "id": "dolia",
+   "name": "Dolia",
+   "aliases": [],
+   "role": "UNKNOWN",
+   "lanes": [],
+   "damage": "MIXED",
+   "tags": []
+  },
+  {
+   "id": "billow",
+   "name": "Billow",
+   "aliases": [],
+   "role": "UNKNOWN",
+   "lanes": [],
+   "damage": "MIXED",
+   "tags": []
+  }
+ ]
 }

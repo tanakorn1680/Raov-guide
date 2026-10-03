@@ -3,7 +3,7 @@ package com.mobaanalyzer.data
 import android.content.Context
 import org.json.JSONObject
 
-enum class Role { TANK, FIGHTER, ASSASSIN, MAGE, CARRY, SUPPORT }
+enum class Role { TANK, FIGHTER, ASSASSIN, MAGE, CARRY, SUPPORT, UNKNOWN }
 enum class DamageType { PHYSICAL, MAGIC, MIXED }
 
 data class Hero(
@@ -13,9 +13,14 @@ data class Hero(
     val role: Role,
     val lanes: List<String>,
     val damage: DamageType,
-    val tags: Set<String>
+    val tags: Set<String>,
+    val counters: Set<String> = emptySet(),
+    val weakTo: Set<String> = emptySet()
 ) {
     fun has(tag: String): Boolean = tag in tags
+
+    /** false for name-only heroes whose role/tags are not filled in yet. */
+    val hasData: Boolean get() = role != Role.UNKNOWN
 }
 
 /** Hero list loaded from assets/heroes.json + fuzzy matching for noisy OCR text. */
@@ -72,10 +77,12 @@ class HeroDatabase(val heroes: List<Hero>) {
                         id = o.getString("id"),
                         name = o.getString("name"),
                         aliases = o.optJSONArray("aliases").toStrings(),
-                        role = Role.valueOf(o.getString("role")),
+                        role = Role.valueOf(o.optString("role", "UNKNOWN")),
                         lanes = o.optJSONArray("lanes").toStrings(),
-                        damage = DamageType.valueOf(o.getString("damage")),
-                        tags = o.optJSONArray("tags").toStrings().toSet()
+                        damage = DamageType.valueOf(o.optString("damage", "MIXED")),
+                        tags = o.optJSONArray("tags").toStrings().toSet(),
+                        counters = o.optJSONArray("counters").toStrings().toSet(),
+                        weakTo = o.optJSONArray("weakTo").toStrings().toSet()
                     )
                 )
             }
