@@ -6,6 +6,9 @@
 
 ## คอมไพล์จากมือถือ (GitHub Actions)
 1. สร้าง repo ใหม่บน GitHub แล้วอัปโหลดทุกไฟล์ในโฟลเดอร์นี้ (รวมโฟลเดอร์ `.github`)
+   - ไฟล์ workflow ตั้งชื่อ `android.yml` ไว้ เพื่อทับ workflow Gradle อัตโนมัติของ GitHub (ตัวที่ฟ้อง `gradlew` ไม่เจอ)
+   - ถ้าโฟลเดอร์ `.github` อัปโหลดไม่ติด ให้ Add file → Create new file ตั้งชื่อ `.github/workflows/android.yml` แล้วคัดลอกเนื้อหาจากไฟล์ `android.yml` ที่รากของโฟลเดอร์มาวาง
+   - ถ้ายังมี workflow อื่นเหลืออยู่ในโฟลเดอร์ `.github/workflows` ให้ลบทิ้ง
 2. แท็บ **Actions** → **Build ProMenu (arm64)** → **Run workflow**
 3. รอจนเสร็จ → ดาวน์โหลด artifact `libProMenu64`
 4. ถ้าไม่ผ่าน ให้ส่ง log บรรทัดที่ขึ้น `error:` มา
