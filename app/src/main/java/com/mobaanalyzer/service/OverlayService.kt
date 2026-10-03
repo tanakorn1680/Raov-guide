@@ -9,6 +9,8 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Build
+import androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED
 import android.graphics.PixelFormat
 import android.os.IBinder
 import android.util.Log
@@ -88,7 +90,16 @@ class OverlayService : Service() {
         startForeground(NOTIF_ID, buildNotification())
         windowManager = getSystemService(WindowManager::class.java)
         createOverlay()
-        registerReceiver(stateReceiver, IntentFilter(AppState.ACTION_GAME_STATE_UPDATED))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(
+                stateReceiver,
+                IntentFilter(AppState.ACTION_GAME_STATE_UPDATED),
+                RECEIVER_NOT_EXPORTED
+            )
+        } else {
+            @Suppress("UnspecifiedRegisterReceiverFlag")
+            registerReceiver(stateReceiver, IntentFilter(AppState.ACTION_GAME_STATE_UPDATED))
+        }
         Log.d(TAG, "created")
     }
 

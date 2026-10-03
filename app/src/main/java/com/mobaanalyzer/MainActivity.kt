@@ -110,7 +110,16 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        registerReceiver(stateReceiver, IntentFilter(AppState.ACTION_GAME_STATE_UPDATED))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(
+                stateReceiver,
+                IntentFilter(AppState.ACTION_GAME_STATE_UPDATED),
+                ContextCompat.RECEIVER_NOT_EXPORTED
+            )
+        } else {
+            @Suppress("UnspecifiedRegisterReceiverFlag")
+            registerReceiver(stateReceiver, IntentFilter(AppState.ACTION_GAME_STATE_UPDATED))
+        }
         refreshPermissionUI()
         updateGameInfoUI()
     }
