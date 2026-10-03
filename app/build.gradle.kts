@@ -30,7 +30,8 @@ android {
     }
 
     buildFeatures {
-        viewBinding = true
+        viewBinding  = true
+        dataBinding  = false
     }
 
     compileOptions {
@@ -58,7 +59,6 @@ dependencies {
     implementation(libs.androidx.localbroadcastmanager)
     implementation(libs.kotlinx.coroutines.android)
 
-    // ML Kit OCR — อ่านข้อความจากหน้าจอ
+    // ML Kit OCR — อ่านข้อความ + ตัวเลขจากหน้าจอ (Latin recognizer ครอบคลุม ROV)
     implementation(libs.mlkit.text.recognition)
-    implementation(libs.mlkit.text.recognition.thai)
 }
