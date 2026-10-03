@@ -11,6 +11,15 @@ LOCAL_SRC_FILES  := main.cpp \
                     imgui/imgui_tables.cpp \
                     imgui/imgui_widgets.cpp \
                     imgui/imgui_demo.cpp
+
+# AML ships its Logger implementation as source (mod/logger.cpp) that every mod must compile in.
+# If that file is missing for some reason, fall back to our own tiny logcat version.
+ifneq ($(wildcard $(LOCAL_PATH)/include/mod/logger.cpp),)
+LOCAL_SRC_FILES  += include/mod/logger.cpp
+else
+LOCAL_SRC_FILES  += logger_fallback.cpp
+endif
+
 LOCAL_C_INCLUDES := $(LOCAL_PATH) $(LOCAL_PATH)/imgui $(LOCAL_PATH)/include $(AML_EXTRA_INC)
 LOCAL_CPPFLAGS   := -O2 -fno-strict-aliasing
 # bind our own ImGui symbols locally so we never collide with another mod's ImGui copy

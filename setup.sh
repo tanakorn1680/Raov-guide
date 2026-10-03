@@ -26,4 +26,5 @@ G="$(find aml -name gloss.h -print -quit || true)"
 if [ -n "$G" ]; then INC="$INC \$(LOCAL_PATH)/../$(dirname "$G")"; fi
 echo "AML_EXTRA_INC :=$INC" > jni/aml_inc.mk
 
+echo "--- AML mod/ folder:"; ls jni/include/mod
 echo "OK: imgui $IMGUI_TAG + AML headers ready"
