@@ -1,0 +1,337 @@
+name: Update Hero Database
+
+on:
+  workflow_dispatch:        # รันมือ
+  schedule:
+    - cron: '0 0 * * 1'    # รันอัตโนมัติทุกวันจันทร์
+
+jobs:
+  update-heroes:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4
+
+      - name: Fetch hero data from rovmeta.com
+        run: |
+          python3 << 'PYEOF'
+          import requests
+          import json
+          import time
+          import re
+          from bs4 import BeautifulSoup
+
+          HEADERS = {'User-Agent': 'Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36'}
+          BASE = "https://rovmeta.com/th/heroes"
+
+          HERO_IDS = [
+              "hayate","florentino","aya","nakroth","y-bneth","lorion",
+              "violet","flowborn","yena","dolia","iggy","bijan","sinestrea",
+              "yue","zata","liliana","billow","butterfly","paine","stuart",
+              "yan","keera","zuka","wonder-woman","slimz","zip","tulen",
+              "elsu","thane","qi","brunhilda","volkath","baldum","xeniel",
+              "eland-orr","rouie","veres","omen","maloch","bonnie","quillen",
+              "tachi","kriknak","richter","azzen-ka","grakk","raz","krixi",
+              "erin","ryoma","heino","zephys","ming","arthur","teemee",
+              "capheny","goverra","murad","aleister","toro","fennik","marja",
+              "dyadia","allain","krizzix","tel-annas","helen","lu-bu","alice",
+              "bright","teeri","ilumia","moren","charlotte","laville","valhein",
+              "zill","dirak","lauriel","bolt-baron","diao-chan","lumburr",
+              "rourke","the-flash","mganga","yorn","ormarr","superman","wukong",
+              "thorne","ata","taara","enzo","kil-groth","mina","gildur","biron",
+              "annette","dextra","airi","kaine","payna","mortos","skud","celica",
+              "ignis","edras","amily","zanis","wisp","cresht","lindis","veera",
+              "natalya","roxie","errol","jinnar","omega","kahlii","astrid","aoi",
+              "tamyn","max","preyta","ishar","d-arcy","arduin","arum","chaugnar",
+              "wiro","sephera"
+          ]
+
+          # Meta data จาก tier list หน้าหลัก
+          META = {
+              "hayate":{"tier":"S+","role":"CARRY","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["mobile","burst"]},
+              "florentino":{"tier":"S+","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["mobile","burst","tanky"]},
+              "aya":{"tier":"S+","role":"SUPPORT","damage":"MAGIC","lanes":["ABYSSAL"],"tags":["heal","cc"]},
+              "nakroth":{"tier":"S+","role":"ASSASSIN","damage":"PHYSICAL","lanes":["JUNGLE"],"tags":["burst","mobile"]},
+              "y-bneth":{"tier":"S+","role":"TANK","damage":"PHYSICAL","lanes":["JUNGLE"],"tags":["tanky","cc"]},
+              "lorion":{"tier":"S+","role":"MAGE","damage":"MAGIC","lanes":["MID"],"tags":["burst","poke"]},
+              "violet":{"tier":"S","role":"CARRY","damage":"PHYSICAL","lanes":["ABYSSAL"],"tags":["poke","mobile"]},
+              "flowborn":{"tier":"S","role":"CARRY","damage":"PHYSICAL","lanes":["ABYSSAL"],"tags":["burst","mobile"]},
+              "yena":{"tier":"S","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["mobile","burst"]},
+              "dolia":{"tier":"S","role":"SUPPORT","damage":"MAGIC","lanes":["ABYSSAL"],"tags":["cc","heal"]},
+              "iggy":{"tier":"S","role":"MAGE","damage":"MAGIC","lanes":["MID"],"tags":["burst","poke"]},
+              "bijan":{"tier":"S","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["tanky","cc"]},
+              "sinestrea":{"tier":"S","role":"ASSASSIN","damage":"PHYSICAL","lanes":["JUNGLE"],"tags":["burst","mobile"]},
+              "yue":{"tier":"S","role":"MAGE","damage":"MAGIC","lanes":["MID"],"tags":["burst","cc"]},
+              "zata":{"tier":"S","role":"MAGE","damage":"MAGIC","lanes":["MID"],"tags":["poke","burst"]},
+              "liliana":{"tier":"S","role":"MAGE","damage":"MAGIC","lanes":["MID"],"tags":["burst","mobile"]},
+              "billow":{"tier":"S","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["tanky","cc"]},
+              "butterfly":{"tier":"A","role":"ASSASSIN","damage":"PHYSICAL","lanes":["JUNGLE"],"tags":["burst","mobile"]},
+              "paine":{"tier":"A","role":"ASSASSIN","damage":"PHYSICAL","lanes":["JUNGLE"],"tags":["burst","mobile"]},
+              "stuart":{"tier":"A","role":"CARRY","damage":"PHYSICAL","lanes":["ABYSSAL"],"tags":["poke"]},
+              "yan":{"tier":"A","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["tanky","cc"]},
+              "keera":{"tier":"A","role":"ASSASSIN","damage":"PHYSICAL","lanes":["JUNGLE"],"tags":["burst","mobile"]},
+              "zuka":{"tier":"A","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["tanky","mobile"]},
+              "wonder-woman":{"tier":"A","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["tanky","cc"]},
+              "slimz":{"tier":"A","role":"CARRY","damage":"PHYSICAL","lanes":["ABYSSAL"],"tags":["poke","mobile"]},
+              "zip":{"tier":"A","role":"SUPPORT","damage":"PHYSICAL","lanes":["ABYSSAL"],"tags":["cc","tanky"]},
+              "tulen":{"tier":"A","role":"MAGE","damage":"MAGIC","lanes":["MID"],"tags":["burst","mobile"]},
+              "elsu":{"tier":"A","role":"CARRY","damage":"PHYSICAL","lanes":["ABYSSAL"],"tags":["poke"]},
+              "thane":{"tier":"A","role":"TANK","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["tanky","cc"]},
+              "qi":{"tier":"A","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["tanky","cc"]},
+              "brunhilda":{"tier":"A","role":"CARRY","damage":"PHYSICAL","lanes":["ABYSSAL"],"tags":["poke","mobile"]},
+              "volkath":{"tier":"A","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["mobile","burst"]},
+              "baldum":{"tier":"A","role":"TANK","damage":"PHYSICAL","lanes":["JUNGLE"],"tags":["tanky","cc"]},
+              "xeniel":{"tier":"A","role":"TANK","damage":"MAGIC","lanes":["ABYSSAL"],"tags":["tanky","heal"]},
+              "eland-orr":{"tier":"A","role":"CARRY","damage":"PHYSICAL","lanes":["ABYSSAL"],"tags":["poke","mobile"]},
+              "rouie":{"tier":"A","role":"SUPPORT","damage":"MAGIC","lanes":["ABYSSAL"],"tags":["heal","cc"]},
+              "veres":{"tier":"A","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["tanky","mobile"]},
+              "omen":{"tier":"A","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["tanky","burst"]},
+              "maloch":{"tier":"A","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["tanky","cc"]},
+              "bonnie":{"tier":"A","role":"MAGE","damage":"MAGIC","lanes":["MID"],"tags":["poke","burst"]},
+              "quillen":{"tier":"A","role":"ASSASSIN","damage":"PHYSICAL","lanes":["JUNGLE"],"tags":["burst"]},
+              "tachi":{"tier":"A","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["mobile","burst"]},
+              "kriknak":{"tier":"A","role":"ASSASSIN","damage":"PHYSICAL","lanes":["JUNGLE"],"tags":["burst","cc"]},
+              "richter":{"tier":"A","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["tanky","cc"]},
+              "azzen-ka":{"tier":"A","role":"MAGE","damage":"MAGIC","lanes":["MID"],"tags":["cc","burst"]},
+              "grakk":{"tier":"A","role":"TANK","damage":"PHYSICAL","lanes":["JUNGLE"],"tags":["tanky","cc"]},
+              "raz":{"tier":"A","role":"MAGE","damage":"MAGIC","lanes":["MID"],"tags":["burst"]},
+              "krixi":{"tier":"A","role":"MAGE","damage":"MAGIC","lanes":["MID"],"tags":["poke","mobile"]},
+              "erin":{"tier":"A","role":"CARRY","damage":"PHYSICAL","lanes":["ABYSSAL"],"tags":["poke"]},
+              "ryoma":{"tier":"A","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["tanky"]},
+              "heino":{"tier":"A","role":"MAGE","damage":"MAGIC","lanes":["MID"],"tags":["burst","cc"]},
+              "zephys":{"tier":"A","role":"FIGHTER","damage":"PHYSICAL","lanes":["JUNGLE"],"tags":["burst","mobile"]},
+              "ming":{"tier":"A","role":"SUPPORT","damage":"MAGIC","lanes":["ABYSSAL"],"tags":["cc","heal"]},
+              "arthur":{"tier":"A","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["tanky","cc"]},
+              "teemee":{"tier":"A","role":"SUPPORT","damage":"MAGIC","lanes":["ABYSSAL"],"tags":["heal","cc"]},
+              "capheny":{"tier":"A","role":"CARRY","damage":"PHYSICAL","lanes":["ABYSSAL"],"tags":["poke"]},
+              "goverra":{"tier":"A","role":"MAGE","damage":"MAGIC","lanes":["MID"],"tags":["burst","poke"]},
+              "murad":{"tier":"B","role":"ASSASSIN","damage":"PHYSICAL","lanes":["JUNGLE","MID"],"tags":["burst","mobile"]},
+              "aleister":{"tier":"B","role":"MAGE","damage":"MAGIC","lanes":["MID"],"tags":["cc","burst"]},
+              "toro":{"tier":"B","role":"TANK","damage":"PHYSICAL","lanes":["JUNGLE"],"tags":["tanky","cc"]},
+              "fennik":{"tier":"B","role":"CARRY","damage":"PHYSICAL","lanes":["ABYSSAL"],"tags":["mobile","poke"]},
+              "marja":{"tier":"B","role":"MAGE","damage":"MAGIC","lanes":["MID"],"tags":["burst"]},
+              "dyadia":{"tier":"B","role":"MAGE","damage":"MAGIC","lanes":["MID"],"tags":["heal","burst"]},
+              "allain":{"tier":"B","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["mobile","burst"]},
+              "krizzix":{"tier":"B","role":"SUPPORT","damage":"PHYSICAL","lanes":["JUNGLE"],"tags":["cc","mobile"]},
+              "tel-annas":{"tier":"B","role":"CARRY","damage":"PHYSICAL","lanes":["ABYSSAL"],"tags":["poke"]},
+              "helen":{"tier":"B","role":"SUPPORT","damage":"MAGIC","lanes":["ABYSSAL"],"tags":["cc","heal"]},
+              "lu-bu":{"tier":"B","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["tanky","burst"]},
+              "alice":{"tier":"B","role":"SUPPORT","damage":"MAGIC","lanes":["ABYSSAL"],"tags":["heal","cc"]},
+              "bright":{"tier":"B","role":"ASSASSIN","damage":"PHYSICAL","lanes":["JUNGLE"],"tags":["burst","mobile"]},
+              "teeri":{"tier":"B","role":"CARRY","damage":"PHYSICAL","lanes":["ABYSSAL"],"tags":["poke"]},
+              "ilumia":{"tier":"B","role":"MAGE","damage":"MAGIC","lanes":["MID"],"tags":["burst","cc"]},
+              "moren":{"tier":"B","role":"CARRY","damage":"PHYSICAL","lanes":["ABYSSAL"],"tags":["poke"]},
+              "charlotte":{"tier":"B","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["tanky","cc"]},
+              "laville":{"tier":"B","role":"CARRY","damage":"PHYSICAL","lanes":["ABYSSAL"],"tags":["burst","mobile"]},
+              "valhein":{"tier":"B","role":"CARRY","damage":"PHYSICAL","lanes":["ABYSSAL"],"tags":["poke"]},
+              "zill":{"tier":"B","role":"MAGE","damage":"MAGIC","lanes":["JUNGLE","MID"],"tags":["burst","mobile"]},
+              "dirak":{"tier":"B","role":"MAGE","damage":"MAGIC","lanes":["MID"],"tags":["poke","burst"]},
+              "lauriel":{"tier":"B","role":"MAGE","damage":"MAGIC","lanes":["MID"],"tags":["burst","mobile"]},
+              "bolt-baron":{"tier":"B","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["tanky"]},
+              "diao-chan":{"tier":"B","role":"MAGE","damage":"MAGIC","lanes":["MID"],"tags":["cc","burst"]},
+              "lumburr":{"tier":"B","role":"SUPPORT","damage":"PHYSICAL","lanes":["ABYSSAL"],"tags":["tanky","cc"]},
+              "rourke":{"tier":"B","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["tanky"]},
+              "the-flash":{"tier":"B","role":"MAGE","damage":"MAGIC","lanes":["MID"],"tags":["mobile","cc"]},
+              "mganga":{"tier":"B","role":"MAGE","damage":"MAGIC","lanes":["MID"],"tags":["heal","burst"]},
+              "yorn":{"tier":"B","role":"CARRY","damage":"PHYSICAL","lanes":["ABYSSAL"],"tags":["poke"]},
+              "ormarr":{"tier":"B","role":"TANK","damage":"PHYSICAL","lanes":["JUNGLE"],"tags":["tanky","cc"]},
+              "superman":{"tier":"B","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["tanky","cc"]},
+              "wukong":{"tier":"B","role":"ASSASSIN","damage":"PHYSICAL","lanes":["JUNGLE"],"tags":["burst","mobile"]},
+              "thorne":{"tier":"B","role":"CARRY","damage":"PHYSICAL","lanes":["ABYSSAL"],"tags":["poke"]},
+              "ata":{"tier":"B","role":"TANK","damage":"PHYSICAL","lanes":["JUNGLE"],"tags":["tanky","cc"]},
+              "taara":{"tier":"B","role":"TANK","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["tanky"]},
+              "enzo":{"tier":"B","role":"ASSASSIN","damage":"PHYSICAL","lanes":["JUNGLE"],"tags":["burst","mobile"]},
+              "kil-groth":{"tier":"B","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["tanky","mobile"]},
+              "mina":{"tier":"B","role":"TANK","damage":"PHYSICAL","lanes":["ABYSSAL"],"tags":["tanky","cc"]},
+              "gildur":{"tier":"B","role":"MAGE","damage":"MAGIC","lanes":["MID"],"tags":["tanky","cc"]},
+              "biron":{"tier":"B","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["tanky"]},
+              "annette":{"tier":"B","role":"SUPPORT","damage":"MAGIC","lanes":["ABYSSAL"],"tags":["cc","heal"]},
+              "dextra":{"tier":"B","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["tanky","cc"]},
+              "airi":{"tier":"B","role":"ASSASSIN","damage":"PHYSICAL","lanes":["JUNGLE"],"tags":["burst","mobile"]},
+              "kaine":{"tier":"B","role":"ASSASSIN","damage":"PHYSICAL","lanes":["JUNGLE"],"tags":["burst"]},
+              "payna":{"tier":"B","role":"SUPPORT","damage":"MAGIC","lanes":["ABYSSAL"],"tags":["heal","cc"]},
+              "mortos":{"tier":"B","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["tanky","cc"]},
+              "skud":{"tier":"B","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["tanky"]},
+              "celica":{"tier":"B","role":"CARRY","damage":"PHYSICAL","lanes":["ABYSSAL"],"tags":["poke","mobile"]},
+              "ignis":{"tier":"B","role":"MAGE","damage":"MAGIC","lanes":["MID"],"tags":["burst","cc"]},
+              "edras":{"tier":"B","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["tanky"]},
+              "amily":{"tier":"B","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["mobile","burst"]},
+              "zanis":{"tier":"C","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["tanky"]},
+              "wisp":{"tier":"C","role":"CARRY","damage":"PHYSICAL","lanes":["ABYSSAL"],"tags":["poke"]},
+              "cresht":{"tier":"C","role":"TANK","damage":"PHYSICAL","lanes":["JUNGLE"],"tags":["tanky","cc"]},
+              "lindis":{"tier":"C","role":"CARRY","damage":"PHYSICAL","lanes":["JUNGLE"],"tags":["poke","mobile"]},
+              "veera":{"tier":"C","role":"MAGE","damage":"MAGIC","lanes":["MID"],"tags":["burst"]},
+              "natalya":{"tier":"C","role":"MAGE","damage":"MAGIC","lanes":["MID"],"tags":["burst"]},
+              "roxie":{"tier":"C","role":"TANK","damage":"PHYSICAL","lanes":["JUNGLE"],"tags":["tanky","cc"]},
+              "errol":{"tier":"C","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["tanky"]},
+              "jinnar":{"tier":"C","role":"MAGE","damage":"MAGIC","lanes":["MID"],"tags":["cc","burst"]},
+              "omega":{"tier":"C","role":"TANK","damage":"PHYSICAL","lanes":["JUNGLE"],"tags":["tanky"]},
+              "kahlii":{"tier":"C","role":"MAGE","damage":"MAGIC","lanes":["MID"],"tags":["poke"]},
+              "astrid":{"tier":"C","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["tanky"]},
+              "aoi":{"tier":"C","role":"ASSASSIN","damage":"PHYSICAL","lanes":["JUNGLE"],"tags":["burst","mobile"]},
+              "tamyn":{"tier":"C","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["tanky","cc"]},
+              "max":{"tier":"C","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["tanky"]},
+              "preyta":{"tier":"C","role":"MAGE","damage":"MAGIC","lanes":["MID"],"tags":["poke"]},
+              "ishar":{"tier":"C","role":"MAGE","damage":"MAGIC","lanes":["MID"],"tags":["cc","burst"]},
+              "d-arcy":{"tier":"C","role":"MAGE","damage":"MAGIC","lanes":["MID"],"tags":["burst"]},
+              "arduin":{"tier":"C","role":"FIGHTER","damage":"PHYSICAL","lanes":["DARK_SLAYER"],"tags":["tanky","cc"]},
+              "arum":{"tier":"C","role":"TANK","damage":"PHYSICAL","lanes":["ABYSSAL"],"tags":["tanky","cc"]},
+              "chaugnar":{"tier":"C","role":"SUPPORT","damage":"PHYSICAL","lanes":["ABYSSAL"],"tags":["tanky","cc"]},
+              "wiro":{"tier":"C","role":"TANK","damage":"PHYSICAL","lanes":["JUNGLE"],"tags":["tanky","cc"]},
+              "sephera":{"tier":"C","role":"MAGE","damage":"MAGIC","lanes":["MID"],"tags":["heal","burst"]},
+          }
+
+          # aliases สำหรับ OCR ที่อาจอ่านชื่อไม่ตรง
+          ALIASES = {
+              "y-bneth": ["Ybneth", "Y bneth"],
+              "eland-orr": ["Eland orr", "Elandorr"],
+              "tel-annas": ["TelAnnas", "Tel Annas"],
+              "azzen-ka": ["AzzenKa", "Azzen Ka"],
+              "lu-bu": ["LuBu"],
+              "wonder-woman": ["WonderWoman", "Wonder Woman"],
+              "kil-groth": ["KilGroth", "Kil Groth"],
+              "diao-chan": ["DiaoChan", "Diao Chan"],
+              "bolt-baron": ["BoltBaron", "Bolt Baron"],
+              "the-flash": ["TheFlash", "The Flash"],
+              "d-arcy": ["DArcy", "D Arcy"],
+          }
+
+          # ชื่อที่แสดงในเกม
+          DISPLAY_NAMES = {
+              "y-bneth": "Y'bneth",
+              "eland-orr": "Eland'orr",
+              "tel-annas": "Tel'Annas",
+              "azzen-ka": "Azzen'Ka",
+              "lu-bu": "Lu Bu",
+              "wonder-woman": "Wonder Woman",
+              "kil-groth": "Kil'Groth",
+              "diao-chan": "Diao Chan",
+              "bolt-baron": "Bolt Baron",
+              "the-flash": "The Flash",
+              "d-arcy": "D'Arcy",
+          }
+
+          def fetch_hero(hero_id):
+              url = f"https://rovmeta.com/th/heroes/{hero_id}"
+              try:
+                  r = requests.get(url, headers=HEADERS, timeout=15)
+                  if r.status_code != 200:
+                      print(f"  ❌ {hero_id}: HTTP {r.status_code}")
+                      return None
+                  soup = BeautifulSoup(r.text, 'html.parser')
+                  text = r.text
+
+                  # ดึง counters (กลัวเจอ) และ strong_against (แข็งใส่)
+                  counters = []
+                  strong_against = []
+                  synergies = []
+
+                  # หา sections ด้วย heading
+                  sections = re.split(r'<h[23][^>]*>', text)
+                  for i, section in enumerate(sections):
+                      section_lower = section.lower()
+                      heroes_in_section = re.findall(r'/heroes/([a-z0-9\-]+)"', section)
+                      heroes_in_section = [h for h in heroes_in_section if h in HERO_IDS]
+
+                      if 'กลัวเจอ' in section_lower or 'counter' in section_lower:
+                          counters = heroes_in_section[:5]
+                      elif 'แข็งใส่' in section_lower or 'strong' in section_lower:
+                          strong_against = heroes_in_section[:6]
+                      elif 'เข้าขา' in section_lower or 'synerg' in section_lower:
+                          synergies = heroes_in_section[:4]
+
+                  # ดึง skills
+                  skills = []
+                  skill_sections = re.finditer(
+                      r'(PASSIVE|SKILL\s*\d|ULTIMATE)[^<]*</[^>]+>\s*<[^>]+>([^<]+)</[^>]+>([\s\S]+?)(?=PASSIVE|SKILL\s*\d|ULTIMATE|$)',
+                      text, re.IGNORECASE
+                  )
+                  for m in skill_sections:
+                      skill_type = m.group(1).strip()
+                      skill_name = re.sub(r'<[^>]+>', '', m.group(2)).strip()
+                      skill_desc_raw = re.sub(r'<[^>]+>', ' ', m.group(3))
+                      skill_desc = re.sub(r'\s+', ' ', skill_desc_raw).strip()[:400]
+                      if skill_name:
+                          skills.append({
+                              "type": skill_type,
+                              "name": skill_name,
+                              "desc": skill_desc
+                          })
+
+                  # ดึง recommended items
+                  items = re.findall(r'"name"\s*:\s*"([^"]+)"', text)
+                  items = list(dict.fromkeys(items))[:6]  # unique, max 6
+
+                  print(f"  ✅ {hero_id}: counters={len(counters)} strong={len(strong_against)} syn={len(synergies)} skills={len(skills)}")
+                  return {
+                      "counters": counters,
+                      "strong_against": strong_against,
+                      "synergies": synergies,
+                      "skills": skills,
+                      "items": items
+                  }
+              except Exception as e:
+                  print(f"  ❌ {hero_id}: {e}")
+                  return None
+
+          print("=== Fetching hero data from rovmeta.com ===")
+          heroes_out = []
+          failed = []
+
+          for hero_id in HERO_IDS:
+              meta = META.get(hero_id, {})
+              display_name = DISPLAY_NAMES.get(hero_id, hero_id.replace('-', ' ').title())
+              aliases = ALIASES.get(hero_id, [])
+
+              details = fetch_hero(hero_id)
+              time.sleep(0.5)
+
+              hero_obj = {
+                  "id": hero_id,
+                  "name": display_name,
+                  "aliases": aliases,
+                  "role": meta.get("role", "UNKNOWN"),
+                  "lanes": meta.get("lanes", []),
+                  "damage": meta.get("damage", "PHYSICAL"),
+                  "tags": meta.get("tags", []),
+                  "tier": meta.get("tier", "B"),
+                  "counters": details["counters"] if details else [],
+                  "strong_against": details["strong_against"] if details else [],
+                  "synergies": details["synergies"] if details else [],
+                  "skills": details["skills"] if details else [],
+                  "items": details["items"] if details else []
+              }
+              heroes_out.append(hero_obj)
+
+          output = {
+              "version": 3,
+              "updated": "auto-updated by GitHub Actions",
+              "source": "rovmeta.com",
+              "total": len(heroes_out),
+              "heroes": heroes_out
+          }
+
+          with open('app/src/main/assets/heroes.json', 'w', encoding='utf-8') as f:
+              json.dump(output, f, ensure_ascii=False, indent=2)
+
+          print(f"\n=== Done: {len(heroes_out)} heroes saved to heroes.json ===")
+          if failed:
+              print(f"Failed: {failed}")
+          PYEOF
+
+      - name: Commit and push heroes.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add app/src/main/assets/heroes.json
+          git diff --staged --quiet || git commit -m "chore: update heroes.json from rovmeta.com [$(date +'%Y-%m-%d')]"
+          git push
