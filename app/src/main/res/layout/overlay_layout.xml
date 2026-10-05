@@ -100,4 +100,15 @@
         android:maxLines="3"
         android:lineSpacingMultiplier="1.3" />
 
+    <!-- Debug status (build v5) -->
+    <TextView
+        android:id="@+id/tvOverlayDebug"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="v5 · รอสถานะจาก ScreenCaptureService..."
+        android:textColor="#88CCFF"
+        android:textSize="9sp"
+        android:maxLines="3"
+        android:layout_marginTop="4dp" />
+
 </LinearLayout>

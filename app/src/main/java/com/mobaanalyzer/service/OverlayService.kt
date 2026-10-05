@@ -37,6 +37,7 @@ class OverlayService : Service() {
     private var tvPhase:  TextView? = null
     private var tvTip:    TextView? = null
     private var tvHeroes: TextView? = null
+    private var tvDebug:  TextView? = null
 
     private var initialX = 0; private var initialY = 0
     private var initialTouchX = 0f; private var initialTouchY = 0f
@@ -88,6 +89,7 @@ class OverlayService : Service() {
         tvPhase  = view.findViewById(R.id.tvOverlayPhase)
         tvTip    = view.findViewById(R.id.tvOverlayTip)
         tvHeroes = view.findViewById(R.id.tvOverlayHeroes)
+        tvDebug  = view.findViewById(R.id.tvOverlayDebug)
 
         view.setOnTouchListener { _, event ->
             when (event.action) {
@@ -119,6 +121,7 @@ class OverlayService : Service() {
     }
 
     private fun updateOverlay() {
+        tvDebug?.text = "v5 · " + AppState.lastStatusText
         val reading = AppState.getScreenReading()
         val state   = AppState.getGameState()
 
