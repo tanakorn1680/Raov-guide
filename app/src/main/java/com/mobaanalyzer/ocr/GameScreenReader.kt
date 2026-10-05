@@ -15,6 +15,11 @@ import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
+data class ReadResult(
+    val reading: ScreenReading,
+    val rawText: String      // OCR text ดิบ สำหรับ debug
+)
+
 class GameScreenReader(private val db: HeroDatabase) {
 
     companion object {
@@ -22,31 +27,21 @@ class GameScreenReader(private val db: HeroDatabase) {
     }
 
     private val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-    private val analyzer = ScreenAnalyzer(db)
+    private val analyzer   = ScreenAnalyzer(db)
 
-    /**
-     * อ่าน Bitmap → ScreenReading (มี allies, enemies, grid, timer, score)
-     * ใช้ position x,y ของแต่ละ text block เพื่อแยกซ้าย/ขวา = เรา/ศัตรู
-     */
-    suspend fun read(bitmap: Bitmap): ScreenReading = withContext(Dispatchers.Default) {
-        val lines = recognizeWithPosition(bitmap)
+    suspend fun read(bitmap: Bitmap): ReadResult = withContext(Dispatchers.Default) {
+        val (lines, rawText) = recognizeWithPosition(bitmap)
 
-        // log ทุก text block ที่เห็น เพื่อ debug
-        Log.d(TAG, "=== OCR found ${lines.size} text blocks ===")
-        lines.forEach { line ->
-            Log.d(TAG, "  [x=${line.cx.format(2)} y=${line.cy.format(2)}] \"${line.text}\"")
-        }
+        Log.d(TAG, "=== OCR: ${lines.size} blocks ===")
+        lines.forEach { Log.d(TAG, "  [${it.cx.fmt()}x${it.cy.fmt()}] \"${it.text}\"") }
 
         val reading = analyzer.analyze(lines)
-        Log.d(TAG, "=== ScreenReading: state=${reading.state} allies=${reading.allies.map{it.name}} enemies=${reading.enemies.map{it.name}} grid=${reading.grid.map{it.name}} ===")
-        reading
+        Log.d(TAG, "state=${reading.state} allies=${reading.allies.map{it.name}} enemies=${reading.enemies.map{it.name}}")
+
+        ReadResult(reading, rawText)
     }
 
-    /**
-     * OCR แบบเก็บตำแหน่ง x,y ของแต่ละ block
-     * normalised เป็น 0.0–1.0 เทียบกับขนาดภาพ
-     */
-    private suspend fun recognizeWithPosition(bitmap: Bitmap): List<OcrLine> =
+    private suspend fun recognizeWithPosition(bitmap: Bitmap): Pair<List<OcrLine>, String> =
         suspendCancellableCoroutine { cont ->
             val image = InputImage.fromBitmap(bitmap, 0)
             recognizer.process(image)
@@ -54,6 +49,7 @@ class GameScreenReader(private val db: HeroDatabase) {
                     val w = bitmap.width.toFloat()
                     val h = bitmap.height.toFloat()
                     val lines = mutableListOf<OcrLine>()
+                    val rawBuilder = StringBuilder()
 
                     for (block in result.textBlocks) {
                         for (line in block.lines) {
@@ -61,9 +57,10 @@ class GameScreenReader(private val db: HeroDatabase) {
                             val cx = (box.left + box.right) / 2f / w
                             val cy = (box.top + box.bottom) / 2f / h
                             lines.add(OcrLine(line.text, cx, cy))
+                            rawBuilder.append(line.text).append("\n")
                         }
                     }
-                    cont.resume(lines)
+                    cont.resume(Pair(lines, rawBuilder.toString().trim()))
                 }
                 .addOnFailureListener { e ->
                     Log.e(TAG, "OCR failed: ${e.message}")
@@ -73,5 +70,5 @@ class GameScreenReader(private val db: HeroDatabase) {
 
     fun close() = recognizer.close()
 
-    private fun Float.format(digits: Int) = "%.${digits}f".format(this)
+    private fun Float.fmt() = "%.2f".format(this)
 }

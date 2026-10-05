@@ -29,6 +29,7 @@ import com.mobaanalyzer.model.GamePhase
 import com.mobaanalyzer.model.GameState
 import com.mobaanalyzer.model.HeroInfo
 import com.mobaanalyzer.ocr.GameScreenReader
+import com.mobaanalyzer.ocr.ReadResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -166,10 +167,11 @@ class ScreenCaptureService : Service() {
             serviceScope.launch {
                 try {
                     // ScreenReading มี allies, enemies, grid, timer, score
-                    val reading = screenReader.read(cropped)
+                    val result  = screenReader.read(cropped)
+                    val reading = result.reading
 
-                    // แปลง ScreenReading → GameState (ที่ OverlayService ใช้อยู่)
-                    val state = reading.toGameState()
+                    // แปลง ScreenReading → GameState พร้อม rawOcrText
+                    val state = reading.toGameState(result.rawText)
                     AppState.updateGameState(state)
                     AppState.updateScreenReading(reading)
                     broadcastUpdate()
@@ -193,7 +195,7 @@ class ScreenCaptureService : Service() {
     }
 
     // แปลง ScreenReading → GameState
-    private fun ScreenReading.toGameState(): GameState {
+    private fun ScreenReading.toGameState(rawText: String = ""): GameState {
         val timeSec = seconds
         return GameState(
             gameTimeSeconds = timeSec,
@@ -202,7 +204,8 @@ class ScreenCaptureService : Service() {
             enemyHeroes     = enemies.map { HeroInfo(name = it.name) },
             myScore         = allyKills,
             enemyScore      = enemyKills,
-            gamePhase       = timeSec?.let { GamePhase.fromSeconds(it) } ?: GamePhase.UNKNOWN
+            gamePhase       = timeSec?.let { GamePhase.fromSeconds(it) } ?: GamePhase.UNKNOWN,
+            rawOcrText      = rawText
         )
     }
 

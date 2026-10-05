@@ -1,43 +1,20 @@
 package com.mobaanalyzer.service
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.app.Service
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import android.os.Build
-import androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED
+import android.app.*
+import android.content.*
 import android.graphics.PixelFormat
-import android.os.IBinder
+import android.os.*
 import android.util.Log
-import android.view.Gravity
-import android.view.LayoutInflater
-import android.view.MotionEvent
-import android.view.View
-import android.view.WindowManager
+import android.view.*
 import android.widget.TextView
 import androidx.core.app.NotificationCompat
 import com.mobaanalyzer.MainActivity
 import com.mobaanalyzer.R
 import com.mobaanalyzer.data.AppState
+import com.mobaanalyzer.engine.ScreenState
 import com.mobaanalyzer.model.GamePhase
 import com.mobaanalyzer.model.GameState
 
-/**
- * OverlayService
- *
- * แสดง floating window ทับหน้าจอเกม
- *
- * Features:
- * - ลาก window ย้ายตำแหน่งได้
- * - รับ broadcast จาก ScreenCaptureService เมื่อมี GameState ใหม่
- * - แสดง: เวลาเกม, สกอร์, phase, คำแนะนำ
- * - กด X ปิด overlay ชั่วคราว
- */
 class OverlayService : Service() {
 
     companion object {
@@ -45,42 +22,31 @@ class OverlayService : Service() {
         private const val CHANNEL_ID = "moba_overlay"
         private const val NOTIF_ID   = 3001
 
-        fun start(context: Context) {
+        fun start(context: Context) =
             context.startForegroundService(Intent(context, OverlayService::class.java))
-        }
 
-        fun stop(context: Context) {
+        fun stop(context: Context) =
             context.stopService(Intent(context, OverlayService::class.java))
-        }
     }
 
     private lateinit var windowManager: WindowManager
     private var overlayView: View? = null
 
-    // Views ภายใน overlay
-    private var tvTimer: TextView?   = null
-    private var tvScore: TextView?   = null
-    private var tvPhase: TextView?   = null
-    private var tvTip: TextView?     = null
-    private var tvHeroes: TextView?  = null
+    private var tvTimer:  TextView? = null
+    private var tvScore:  TextView? = null
+    private var tvPhase:  TextView? = null
+    private var tvTip:    TextView? = null
+    private var tvHeroes: TextView? = null
 
-    // ── Drag state ────────────────────────────────────────────────────────────
-    private var initialX = 0
-    private var initialY = 0
-    private var initialTouchX = 0f
-    private var initialTouchY = 0f
+    private var initialX = 0; private var initialY = 0
+    private var initialTouchX = 0f; private var initialTouchY = 0f
 
-    // ── Broadcast receiver รับ GameState update ───────────────────────────────
+    // รับ broadcast ทุกครั้งที่ ScreenCaptureService วิเคราะห์เสร็จ
     private val stateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            val state = AppState.getGameState() ?: return
-            updateOverlay(state)
+            updateOverlay()
         }
     }
-
-    // =========================================================================
-    // Lifecycle
-    // =========================================================================
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -90,29 +56,20 @@ class OverlayService : Service() {
         startForeground(NOTIF_ID, buildNotification())
         windowManager = getSystemService(WindowManager::class.java)
         createOverlay()
+        val filter = IntentFilter(AppState.ACTION_GAME_STATE_UPDATED)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(
-                stateReceiver,
-                IntentFilter(AppState.ACTION_GAME_STATE_UPDATED),
-                RECEIVER_NOT_EXPORTED
-            )
+            registerReceiver(stateReceiver, filter, RECEIVER_NOT_EXPORTED)
         } else {
             @Suppress("UnspecifiedRegisterReceiverFlag")
-            registerReceiver(stateReceiver, IntentFilter(AppState.ACTION_GAME_STATE_UPDATED))
+            registerReceiver(stateReceiver, filter)
         }
-        Log.d(TAG, "created")
     }
 
     override fun onDestroy() {
         super.onDestroy()
         unregisterReceiver(stateReceiver)
         removeOverlay()
-        Log.d(TAG, "destroyed")
     }
-
-    // =========================================================================
-    // Overlay Window
-    // =========================================================================
 
     private fun createOverlay() {
         val params = WindowManager.LayoutParams(
@@ -120,53 +77,36 @@ class OverlayService : Service() {
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
-            WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
+            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
             PixelFormat.TRANSLUCENT
-        ).apply {
-            gravity = Gravity.TOP or Gravity.START
-            x = 16
-            y = 100
-        }
+        ).apply { gravity = Gravity.TOP or Gravity.END; x = 0; y = 200 }
 
         val view = LayoutInflater.from(this).inflate(R.layout.overlay_layout, null)
         overlayView = view
-
         tvTimer  = view.findViewById(R.id.tvOverlayTimer)
         tvScore  = view.findViewById(R.id.tvOverlayScore)
         tvPhase  = view.findViewById(R.id.tvOverlayPhase)
         tvTip    = view.findViewById(R.id.tvOverlayTip)
         tvHeroes = view.findViewById(R.id.tvOverlayHeroes)
 
-        // ── Drag to move ──────────────────────────────────────────────────────
-        view.setOnTouchListener { v, event ->
+        view.setOnTouchListener { _, event ->
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
-                    initialX      = params.x
-                    initialY      = params.y
-                    initialTouchX = event.rawX
-                    initialTouchY = event.rawY
-                    true
+                    initialX = params.x; initialY = params.y
+                    initialTouchX = event.rawX; initialTouchY = event.rawY; true
                 }
                 MotionEvent.ACTION_MOVE -> {
                     params.x = initialX + (event.rawX - initialTouchX).toInt()
                     params.y = initialY + (event.rawY - initialTouchY).toInt()
-                    windowManager.updateViewLayout(view, params)
-                    true
+                    windowManager.updateViewLayout(view, params); true
                 }
                 else -> false
             }
         }
 
-        // ── ปุ่มปิด overlay ───────────────────────────────────────────────────
-        view.findViewById<View>(R.id.btnOverlayClose)?.setOnClickListener {
-            removeOverlay()
-        }
+        view.findViewById<View>(R.id.btnOverlayClose)?.setOnClickListener { removeOverlay() }
 
-        try {
-            windowManager.addView(view, params)
-            Log.d(TAG, "overlay added")
-        } catch (e: Exception) {
+        try { windowManager.addView(view, params) } catch (e: Exception) {
             Log.e(TAG, "addView failed: ${e.message}")
         }
     }
@@ -178,77 +118,78 @@ class OverlayService : Service() {
         }
     }
 
-    // =========================================================================
-    // Update UI
-    // =========================================================================
-
-        private fun updateOverlay(state: GameState) {
-        // Timer
-        tvTimer?.text = state.gameTimeText ?: "--:--"
-
-        // Score
-        val my = state.myScore ?: "-"
-        val en = state.enemyScore ?: "-"
-        tvScore?.text = "$my  ⚔  $en"
-
-        // Phase
-        tvPhase?.text = when (state.gamePhase) {
-            GamePhase.EARLY_GAME -> "🌅 Early"
-            GamePhase.MID_GAME   -> "⚔️ Mid"
-            GamePhase.LATE_GAME  -> "🔥 Late"
-            GamePhase.UNKNOWN    -> "?"
-        }
-
-        // แสดงฮีโร่ฝ่ายเราและศัตรู แยกกัน
+    private fun updateOverlay() {
         val reading = AppState.getScreenReading()
-        val allies  = reading?.allies?.map { it.name }  ?: state.myHeroes.map { it.name }
-        val enemies = reading?.enemies?.map { it.name } ?: state.enemyHeroes.map { it.name }
+        val state   = AppState.getGameState()
 
-        val heroText = when {
-            allies.isNotEmpty() || enemies.isNotEmpty() -> {
-                val a = if (allies.isNotEmpty()) "🔵 " + allies.joinToString(", ") else "🔵 ?"
-                val e = if (enemies.isNotEmpty()) "🔴 " + enemies.joinToString(", ") else "🔴 ?"
-                a + "\n" + e
+        // ===== แสดงผลหลัก =====
+        tvTimer?.text = state?.gameTimeText ?: "--:--"
+
+        val my = state?.myScore ?: "-"
+        val en = state?.enemyScore ?: "-"
+        tvScore?.text = "$my ⚔ $en"
+
+        // ===== ฮีโร่ที่ตรวจพบ แยกฝั่ง =====
+        val allies  = reading?.allies?.map { it.name }  ?: emptyList()
+        val enemies = reading?.enemies?.map { it.name } ?: emptyList()
+        val grid    = reading?.grid?.map { it.name }    ?: emptyList()
+
+        val heroText = buildString {
+            if (allies.isNotEmpty())  append("🔵 ${allies.joinToString(", ")}\n")
+            if (enemies.isNotEmpty()) append("🔴 ${enemies.joinToString(", ")}\n")
+            if (allies.isEmpty() && enemies.isEmpty()) {
+                // DEBUG: แสดง OCR text ดิบ เพื่อดูว่าอ่านได้อะไร
+                val raw = state?.rawOcrText ?: ""
+                if (raw.isNotBlank()) {
+                    append("📡 OCR:\n${raw.take(120)}")
+                } else {
+                    append("ยังไม่ตรวจพบฮีโร่")
+                }
             }
-            else -> "ยังไม่ตรวจพบฮีโร่"
+            if (grid.isNotEmpty()) append("🎯 ${grid.take(3).joinToString(", ")}")
         }
-        tvHeroes?.text = heroText
+        tvHeroes?.text = heroText.trim()
 
-        // Tip
-        tvTip?.text = generateTip(state)
+        // ===== Phase และ Tip =====
+        val screenState = reading?.state
+        tvPhase?.text = when {
+            screenState == ScreenState.DRAFT   -> "📋 Ban/Pick"
+            screenState == ScreenState.IN_GAME -> when (state?.gamePhase) {
+                GamePhase.EARLY_GAME -> "🌅 Early"
+                GamePhase.MID_GAME   -> "⚔️ Mid"
+                GamePhase.LATE_GAME  -> "🔥 Late"
+                else                 -> "🎮 In Game"
+            }
+            else -> "📡 กำลังอ่าน..."
+        }
+
+        tvTip?.text = when {
+            screenState == ScreenState.DRAFT && enemies.isNotEmpty() ->
+                generatePickTip(allies, enemies)
+            screenState == ScreenState.IN_GAME ->
+                generateGameTip(state)
+            else -> "📡 กำลังอ่านหน้าจอ..."
+        }
     }
 
-    /**
-     * สร้างคำแนะนำเบื้องต้นจาก GameState
-     * Phase 3 (AI engine) จะมาแทนที่ส่วนนี้ด้วย logic ที่ซับซ้อนกว่า
-     */
-    private fun generateTip(state: GameState): String {
-        val myScore = state.myScore ?: 0
-        val enScore = state.enemyScore ?: 0
-        val diff = myScore - enScore
+    private fun generatePickTip(allies: List<String>, enemies: List<String>): String {
+        return buildString {
+            append("ศัตรู: ${enemies.joinToString(", ")}\n")
+            append("เพื่อน: ${if (allies.isEmpty()) "?" else allies.joinToString(", ")}\n")
+            append("💡 เลือกตัวที่ counter ศัตรูได้")
+        }
+    }
 
+    private fun generateGameTip(state: GameState?): String {
+        if (state == null) return "📡 กำลังอ่าน..."
+        val diff = (state.myScore ?: 0) - (state.enemyScore ?: 0)
         return when (state.gamePhase) {
-            GamePhase.EARLY_GAME -> when {
-                diff >= 2  -> "✅ เราได้เปรียบ — push lane กดดันต่อ"
-                diff <= -2 -> "⚠️ เราเสียเปรียบ — farm safe ก่อน"
-                else       -> "🎯 Early game — focus farm + jungle"
-            }
-            GamePhase.MID_GAME -> when {
-                diff >= 3  -> "🏆 ได้เปรียบชัด — ตีหอร่วมกัน"
-                diff <= -2 -> "🛡️ เสียเปรียบ — def + poke ไม่รับ fight"
-                else       -> "🗺️ Mid game — contest ทุก objective"
-            }
-            GamePhase.LATE_GAME -> when {
-                diff >= 2  -> "⚔️ Late game — รวมทีม push finish"
-                else       -> "🏰 Late — def high ground รอ mistake"
-            }
-            GamePhase.UNKNOWN -> "📡 กำลังอ่านหน้าจอ..."
+            GamePhase.EARLY_GAME -> if (diff >= 2) "✅ ได้เปรียบ — push lane" else "🎯 Farm + Jungle"
+            GamePhase.MID_GAME   -> if (diff >= 3) "🏆 ได้เปรียบ — ตีหอ" else "🗺️ Contest Objective"
+            GamePhase.LATE_GAME  -> if (diff >= 2) "⚔️ รวมทีม push" else "🏰 Def รอ mistake"
+            else -> "📡 กำลังอ่าน..."
         }
     }
-
-    // =========================================================================
-    // Notification
-    // =========================================================================
 
     private fun buildNotification(): Notification {
         val pi = PendingIntent.getActivity(
@@ -260,8 +201,7 @@ class OverlayService : Service() {
             .setContentText("Overlay กำลังแสดงผล")
             .setSmallIcon(R.drawable.ic_notification)
             .setContentIntent(pi)
-            .setOngoing(true)
-            .setSilent(true)
+            .setOngoing(true).setSilent(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()
     }
@@ -269,9 +209,7 @@ class OverlayService : Service() {
     private fun createChannel() {
         val nm = getSystemService(NotificationManager::class.java)
         if (nm.getNotificationChannel(CHANNEL_ID) != null) return
-        NotificationChannel(CHANNEL_ID, "MOBA Overlay", NotificationManager.IMPORTANCE_LOW).apply {
-            setShowBadge(false)
-            nm.createNotificationChannel(this)
-        }
+        NotificationChannel(CHANNEL_ID, "MOBA Overlay", NotificationManager.IMPORTANCE_LOW)
+            .apply { setShowBadge(false); nm.createNotificationChannel(this) }
     }
 }
