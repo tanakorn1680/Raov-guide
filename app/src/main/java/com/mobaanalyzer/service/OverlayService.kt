@@ -182,13 +182,13 @@ class OverlayService : Service() {
     // Update UI
     // =========================================================================
 
-    private fun updateOverlay(state: GameState) {
+        private fun updateOverlay(state: GameState) {
         // Timer
         tvTimer?.text = state.gameTimeText ?: "--:--"
 
         // Score
-        val my  = state.myScore ?: "-"
-        val en  = state.enemyScore ?: "-"
+        val my = state.myScore ?: "-"
+        val en = state.enemyScore ?: "-"
         tvScore?.text = "$my  ⚔  $en"
 
         // Phase
@@ -199,15 +199,23 @@ class OverlayService : Service() {
             GamePhase.UNKNOWN    -> "?"
         }
 
-        // Heroes detected
-        val heroText = if (state.myHeroes.isNotEmpty()) {
-            state.myHeroes.joinToString(", ") { it.name }
-        } else {
-            "ยังไม่ตรวจพบฮีโร่"
+        // แสดงฮีโร่ฝ่ายเราและศัตรู แยกกัน
+        val reading = AppState.getScreenReading()
+        val allies  = reading?.allies?.map { it.name }  ?: state.myHeroes.map { it.name }
+        val enemies = reading?.enemies?.map { it.name } ?: state.enemyHeroes.map { it.name }
+
+        val heroText = when {
+            allies.isNotEmpty() || enemies.isNotEmpty() -> {
+                val a = if (allies.isNotEmpty()) "🔵 ${allies.joinToString(", ")}" else "🔵 ?"
+                val e = if (enemies.isNotEmpty()) "🔴 ${enemies.joinToString(", ")}" else "🔴 ?"
+                "$a
+$e"
+            }
+            else -> "ยังไม่ตรวจพบฮีโร่"
         }
         tvHeroes?.text = heroText
 
-        // Tip — จาก phase + สถานการณ์
+        // Tip
         tvTip?.text = generateTip(state)
     }
 

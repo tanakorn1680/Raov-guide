@@ -5,77 +5,65 @@ import android.util.Log
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
-import com.mobaanalyzer.model.GameState
+import com.mobaanalyzer.data.HeroDatabase
+import com.mobaanalyzer.engine.OcrLine
+import com.mobaanalyzer.engine.ScreenAnalyzer
+import com.mobaanalyzer.engine.ScreenReading
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
-/**
- * GameScreenReader
- *
- * รับ Bitmap จาก MediaProjection → ส่งเข้า ML Kit OCR → คืน raw text
- * แล้วส่งให้ GameStateParser แปลงเป็น GameState
- *
- * ใช้ Latin recognizer เพราะ ROV ใช้ตัวเลขและอักษรภาษาอังกฤษเป็นหลัก
- * (ชื่อฮีโร่, ตัวเลข HP, timer, score)
- */
-class GameScreenReader {
+class GameScreenReader(private val db: HeroDatabase) {
 
     companion object {
         private const val TAG = "GameScreenReader"
     }
 
     private val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-    private val parser = GameStateParser()
+    private val analyzer = ScreenAnalyzer(db)
 
     /**
-     * อ่าน Bitmap → GameState
-     * suspend function — เรียกใน coroutine
+     * อ่าน Bitmap → ScreenReading (มี allies, enemies, grid, timer, score)
+     * ใช้ position x,y ของแต่ละ text block เพื่อแยกซ้าย/ขวา = เรา/ศัตรู
      */
-    suspend fun read(bitmap: Bitmap): GameState = withContext(Dispatchers.Default) {
-        val rawText = recognizeText(bitmap)
-        Log.d(TAG, "OCR raw:\n$rawText")
-        parser.parse(rawText)
+    suspend fun read(bitmap: Bitmap): ScreenReading = withContext(Dispatchers.Default) {
+        val lines = recognizeWithPosition(bitmap)
+
+        // log ทุก text block ที่เห็น เพื่อ debug
+        Log.d(TAG, "=== OCR found ${lines.size} text blocks ===")
+        lines.forEach { line ->
+            Log.d(TAG, "  [x=${line.cx.format(2)} y=${line.cy.format(2)}] \"${line.text}\"")
+        }
+
+        val reading = analyzer.analyze(lines)
+        Log.d(TAG, "=== ScreenReading: state=${reading.state} allies=${reading.allies.map{it.name}} enemies=${reading.enemies.map{it.name}} grid=${reading.grid.map{it.name}} ===")
+        reading
     }
 
     /**
-     * อ่าน เฉพาะ region ที่ต้องการ (crop ก่อน OCR → เร็วขึ้น)
-     *
-     * @param bitmap  ภาพเต็มหน้าจอ
-     * @param xRatio  สัดส่วนซ้าย  (0.0–1.0)
-     * @param yRatio  สัดส่วนบน   (0.0–1.0)
-     * @param wRatio  สัดส่วนกว้าง (0.0–1.0)
-     * @param hRatio  สัดส่วนสูง   (0.0–1.0)
+     * OCR แบบเก็บตำแหน่ง x,y ของแต่ละ block
+     * normalised เป็น 0.0–1.0 เทียบกับขนาดภาพ
      */
-    suspend fun readRegion(
-        bitmap: Bitmap,
-        xRatio: Float, yRatio: Float,
-        wRatio: Float, hRatio: Float
-    ): String = withContext(Dispatchers.Default) {
-        val x = (bitmap.width  * xRatio).toInt().coerceIn(0, bitmap.width  - 1)
-        val y = (bitmap.height * yRatio).toInt().coerceIn(0, bitmap.height - 1)
-        val w = (bitmap.width  * wRatio).toInt().coerceIn(1, bitmap.width  - x)
-        val h = (bitmap.height * hRatio).toInt().coerceIn(1, bitmap.height - y)
-
-        val crop = Bitmap.createBitmap(bitmap, x, y, w, h)
-        recognizeText(crop).also { crop.recycle() }
-    }
-
-    /**
-     * ML Kit text recognition — suspend wrapper
-     */
-    private suspend fun recognizeText(bitmap: Bitmap): String =
+    private suspend fun recognizeWithPosition(bitmap: Bitmap): List<OcrLine> =
         suspendCancellableCoroutine { cont ->
             val image = InputImage.fromBitmap(bitmap, 0)
             recognizer.process(image)
                 .addOnSuccessListener { result ->
-                    val text = result.textBlocks
-                        .joinToString("\n") { block ->
-                            block.lines.joinToString(" ") { it.text }
+                    val w = bitmap.width.toFloat()
+                    val h = bitmap.height.toFloat()
+                    val lines = mutableListOf<OcrLine>()
+
+                    for (block in result.textBlocks) {
+                        for (line in block.lines) {
+                            val box = line.boundingBox ?: continue
+                            val cx = (box.left + box.right) / 2f / w
+                            val cy = (box.top + box.bottom) / 2f / h
+                            lines.add(OcrLine(line.text, cx, cy))
                         }
-                    cont.resume(text)
+                    }
+                    cont.resume(lines)
                 }
                 .addOnFailureListener { e ->
                     Log.e(TAG, "OCR failed: ${e.message}")
@@ -83,7 +71,7 @@ class GameScreenReader {
                 }
         }
 
-    fun close() {
-        recognizer.close()
-    }
+    fun close() = recognizer.close()
+
+    private fun Float.format(digits: Int) = "%.${digits}f".format(this)
 }

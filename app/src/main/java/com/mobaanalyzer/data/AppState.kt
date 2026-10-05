@@ -1,21 +1,15 @@
 package com.mobaanalyzer.data
 
+import com.mobaanalyzer.engine.ScreenReading
 import com.mobaanalyzer.model.GameState
 
-/**
- * AppState — shared state ระหว่าง services และ UI
- *
- * Thread-safe ด้วย @Synchronized
- * ยืม pattern จาก bankconfirm AppState
- */
 object AppState {
 
     const val ACTION_GAME_STATE_UPDATED = "com.mobaanalyzer.ACTION_GAME_STATE_UPDATED"
     const val MAX_STATE_HISTORY = 20
 
-    // ── GameState history ─────────────────────────────────────────────────────
-
     @Volatile private var currentState: GameState? = null
+    @Volatile private var currentReading: ScreenReading? = null
     private val stateHistory = mutableListOf<GameState>()
 
     @Synchronized
@@ -26,12 +20,13 @@ object AppState {
     }
 
     @Synchronized
-    fun getGameState(): GameState? = currentState
+    fun updateScreenReading(reading: ScreenReading) {
+        currentReading = reading
+    }
 
-    @Synchronized
-    fun getStateHistory(): List<GameState> = stateHistory.toList()
-
-    // ── Status text สำหรับ debug UI ───────────────────────────────────────────
+    @Synchronized fun getGameState(): GameState? = currentState
+    @Synchronized fun getScreenReading(): ScreenReading? = currentReading
+    @Synchronized fun getStateHistory(): List<GameState> = stateHistory.toList()
 
     @Volatile var lastStatusText: String = "ยังไม่เริ่ม"
         private set
