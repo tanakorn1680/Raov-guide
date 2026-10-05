@@ -206,10 +206,10 @@ class OverlayService : Service() {
 
         val heroText = when {
             allies.isNotEmpty() || enemies.isNotEmpty() -> {
-                val a = if (allies.isNotEmpty()) "🔵 ${allies.joinToString(", ")}" else "🔵 ?"
-                val e = if (enemies.isNotEmpty()) "🔴 ${enemies.joinToString(", ")}" else "🔴 ?"
-                "$a
-$e"
+                val a = if (allies.isNotEmpty()) "🔵 " + allies.joinToString(", ") else "🔵 ?"
+                val e = if (enemies.isNotEmpty()) "🔴 " + enemies.joinToString(", ") else "🔴 ?"
+                a + "
+" + e
             }
             else -> "ยังไม่ตรวจพบฮีโร่"
         }
