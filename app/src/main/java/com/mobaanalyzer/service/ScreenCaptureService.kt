@@ -1,5 +1,6 @@
 package com.mobaanalyzer.service
 
+import android.app.Activity
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -105,11 +106,13 @@ class ScreenCaptureService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val resultCode = intent?.getIntExtra(EXTRA_RESULT_CODE, -1) ?: -1
+        // หมายเหตุ: Activity.RESULT_OK = -1 จึงห้ามใช้ -1 เป็นค่า "ไม่มีข้อมูล"
+        val resultCode = intent?.getIntExtra(EXTRA_RESULT_CODE, Int.MIN_VALUE) ?: Int.MIN_VALUE
         val resultData = intent?.getParcelableExtra<Intent>(EXTRA_RESULT_DATA)
 
-        if (resultCode == -1 || resultData == null) {
+        if (resultCode != Activity.RESULT_OK || resultData == null) {
             Log.w(TAG, "no projection data — stopping")
+            report("ไม่ได้รับสิทธิ์จับภาพ (code=$resultCode, data=${resultData != null})")
             stopSelf()
             return START_NOT_STICKY
         }

@@ -121,7 +121,7 @@ class OverlayService : Service() {
     }
 
     private fun updateOverlay() {
-        tvDebug?.text = "v5 · " + AppState.lastStatusText
+        tvDebug?.text = "v6 · " + AppState.lastStatusText
         val reading = AppState.getScreenReading()
         val state   = AppState.getGameState()
 
