@@ -6,6 +6,7 @@ import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import com.mobaanalyzer.data.HeroDatabase
+import com.mobaanalyzer.engine.NormRect
 import com.mobaanalyzer.engine.OcrLine
 import com.mobaanalyzer.engine.ScreenAnalyzer
 import com.mobaanalyzer.engine.ScreenReading
@@ -29,13 +30,13 @@ class GameScreenReader(private val db: HeroDatabase) {
     private val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
     private val analyzer   = ScreenAnalyzer(db)
 
-    suspend fun read(bitmap: Bitmap): ReadResult = withContext(Dispatchers.Default) {
+    suspend fun read(bitmap: Bitmap, ignore: List<NormRect> = emptyList()): ReadResult = withContext(Dispatchers.Default) {
         val (lines, rawText) = recognizeWithPosition(bitmap)
 
         Log.d(TAG, "=== OCR: ${lines.size} blocks ===")
         lines.forEach { Log.d(TAG, "  [${it.cx.fmt()}x${it.cy.fmt()}] \"${it.text}\"") }
 
-        val reading = analyzer.analyze(lines)
+        val reading = analyzer.analyze(lines, ignore)
         Log.d(TAG, "state=${reading.state} allies=${reading.allies.map{it.name}} enemies=${reading.enemies.map{it.name}}")
 
         ReadResult(reading, rawText)

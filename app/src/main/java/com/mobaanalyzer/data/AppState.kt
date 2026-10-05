@@ -31,6 +31,9 @@ object AppState {
     @Volatile var lastStatusText: String = "ยังไม่เริ่ม"
         private set
 
+    /** พื้นที่ที่ overlay ของแอปนี้ทับอยู่บนจอ (พิกเซล) — ใช้กัน OCR อ่าน overlay ตัวเอง */
+    @Volatile var overlayBounds: android.graphics.Rect? = null
+
     @Synchronized
     fun updateStatus(text: String) { lastStatusText = text }
 }

@@ -26,6 +26,7 @@ import com.mobaanalyzer.MainActivity
 import com.mobaanalyzer.R
 import com.mobaanalyzer.data.AppState
 import com.mobaanalyzer.data.HeroDatabase
+import com.mobaanalyzer.engine.NormRect
 import com.mobaanalyzer.engine.ScreenReading
 import com.mobaanalyzer.engine.ScreenState
 import com.mobaanalyzer.model.GamePhase
@@ -239,10 +240,19 @@ class ScreenCaptureService : Service() {
             val cropped = Bitmap.createBitmap(bitmap, 0, 0, iw, ih)
             bitmap.recycle()
 
+            // พื้นที่ overlay ของเราเอง (สัดส่วน 0..1) — ไม่อ่านตัวหนังสือในนั้น
+            val ob = AppState.overlayBounds
+            val ignore: List<NormRect> = if (ob == null) emptyList() else listOf(
+                NormRect(
+                    ob.left.toFloat() / iw - 0.01f, ob.top.toFloat() / ih - 0.01f,
+                    ob.right.toFloat() / iw + 0.01f, ob.bottom.toFloat() / ih + 0.01f
+                )
+            )
+
             serviceScope.launch {
                 try {
                     // ScreenReading มี allies, enemies, grid, timer, score
-                    val result  = screenReader.read(cropped)
+                    val result  = screenReader.read(cropped, ignore)
                     val reading = result.reading
 
                     // แปลง ScreenReading → GameState พร้อม rawOcrText
