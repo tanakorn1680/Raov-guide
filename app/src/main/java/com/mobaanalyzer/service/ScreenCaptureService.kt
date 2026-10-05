@@ -127,6 +127,12 @@ class ScreenCaptureService : Service() {
     private fun setupMediaProjection(resultCode: Int, data: Intent) {
         val pm = getSystemService(MediaProjectionManager::class.java)
         mediaProjection = pm.getMediaProjection(resultCode, data)
+        mediaProjection!!.registerCallback(object : MediaProjection.Callback() {
+            override fun onStop() {
+                Log.w(TAG, "projection stopped by system")
+                stopSelf()
+            }
+        }, handler)
         imageReader = ImageReader.newInstance(screenWidth, screenHeight, PixelFormat.RGBA_8888, 2)
         virtualDisplay = mediaProjection!!.createVirtualDisplay(
             "MobaCapture", screenWidth, screenHeight, screenDpi,

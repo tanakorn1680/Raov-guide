@@ -43,12 +43,18 @@
         <service
             android:name=".service.OverlayService"
             android:exported="false"
-            android:foregroundServiceType="mediaProjection"
+            android:foregroundServiceType="specialUse"
             android:stopWithTask="false">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="MOBA game overlay analyzer" />
         </service>
+
+        <!-- ScreenCaptureService — จับภาพหน้าจอ (MediaProjection) + OCR -->
+        <service
+            android:name=".service.ScreenCaptureService"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection" />
 
         <!-- KeepAliveService — WakeLock + restart guard (ยืมจาก bankconfirm) -->
         <service
