@@ -329,7 +329,7 @@ class OverlayService : Service() {
         tvEnemies?.text = if (enemies.isEmpty()) "—" else enemies.joinToString(", ")
 
         tvTip?.text = when {
-            screenState == ScreenState.DRAFT && enemies.isNotEmpty() -> generatePickTip(reading?.allies ?: emptyList(), reading?.enemies ?: emptyList())
+            screenState == ScreenState.DRAFT && enemies.isNotEmpty() -> generatePickTip(reading?.allies ?: emptyList<com.mobaanalyzer.data.Hero>(), reading?.enemies ?: emptyList<com.mobaanalyzer.data.Hero>())
             screenState == ScreenState.IN_GAME                       -> generateGameTip(state)
             else                                                     -> "รอข้อมูลจากหน้าจอ"
         }
@@ -361,13 +361,10 @@ class OverlayService : Service() {
         return listOfNotNull(phase, time, score).joinToString(" · ")
     }
 
-        private fun generatePickTip(allies: List<com.mobaanalyzer.engine.ScreenHero>, enemies: List<com.mobaanalyzer.engine.ScreenHero>): String {
-        val db = AppState.heroDb ?: return "เลือกตัวที่ counter ศัตรูได้"
-        val allyHeroes  = allies.mapNotNull  { db.match(it.name) }
-        val enemyHeroes = enemies.mapNotNull { db.match(it.name) }
-        val pool        = db.heroes
-        val advisor     = PickAdvisor()
-        val recs        = advisor.recommend(allyHeroes, enemyHeroes, pool, top = 3)
+        private fun generatePickTip(allies: List<com.mobaanalyzer.data.Hero>, enemies: List<com.mobaanalyzer.data.Hero>): String {
+        val db   = AppState.heroDb ?: return "เลือกตัวที่ counter ศัตรูได้"
+        val pool = db.heroes
+        val recs = com.mobaanalyzer.engine.PickAdvisor().recommend(allies, enemies, pool, top = 3)
         if (recs.isEmpty()) return "ยังวิเคราะห์ไม่ได้ — รอศัตรูเลือกเพิ่ม"
         return buildString {
             appendLine("💡 แนะนำ:")
