@@ -362,16 +362,30 @@ class OverlayService : Service() {
     }
 
         private fun generatePickTip(allies: List<com.mobaanalyzer.data.Hero>, enemies: List<com.mobaanalyzer.data.Hero>): String {
-        val db   = AppState.heroDb ?: return "เลือกตัวที่ counter ศัตรูได้"
-        val pool = db.heroes
-        val recs = com.mobaanalyzer.engine.PickAdvisor().recommend(allies, enemies, pool, top = 3)
-        if (recs.isEmpty()) return "ยังวิเคราะห์ไม่ได้ — รอศัตรูเลือกเพิ่ม"
+        val db      = AppState.heroDb ?: return "เลือกตัวที่ counter ศัตรูได้"
+        val advisor = com.mobaanalyzer.engine.PickAdvisor()
+        val phase   = advisor.draftPhase(allies, enemies)
+        val recs    = advisor.recommend(allies, enemies, db.heroes, top = 3)
+
+        if (recs.isEmpty()) return when {
+            enemies.isEmpty() -> "💡 เริ่ม Draft — แนะนำ Blind Pick ที่ยืดหยุ่น"
+            else              -> "รอศัตรูเลือกเพิ่มเพื่อวิเคราะห์"
+        }
+
         return buildString {
-            appendLine("💡 แนะนำ:")
-            for (r in recs) {
-                append("• ${r.hero.name} (${r.scores.label})")
-                if (r.reasons.isNotEmpty()) append(" — ${r.reasons.take(2).joinToString(", ")}")
-                appendLine()
+            val phaseText = when (phase) {
+                com.mobaanalyzer.engine.DraftPhase.BLIND -> "Blind Pick"
+                com.mobaanalyzer.engine.DraftPhase.EARLY -> "Early Draft"
+                com.mobaanalyzer.engine.DraftPhase.MID   -> "Mid Draft"
+                com.mobaanalyzer.engine.DraftPhase.LATE  -> "Late Draft"
+                com.mobaanalyzer.engine.DraftPhase.FINAL -> "Final Pick"
+            }
+            appendLine("💡 $phaseText (ความมั่นใจ: ${recs.firstOrNull()?.scores?.confidence ?: "-"})")
+            for ((i, r) in recs.withIndex()) {
+                append("${i + 1}. ${r.hero.name}  ${r.scores.finalScore}")
+                appendLine("  [${r.scores.label}]")
+                if (r.reasons.isNotEmpty()) appendLine("   ✅ ${r.reasons.take(2).joinToString("  ")}")
+                if (r.avoidReasons.isNotEmpty()) appendLine("   ⚠️ ${r.avoidReasons.first()}")
             }
         }.trim()
     }
