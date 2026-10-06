@@ -15,7 +15,8 @@ data class Hero(
     val damage: DamageType,
     val tags: Set<String>,
     val counters: Set<String> = emptySet(),
-    val weakTo: Set<String> = emptySet()
+    val weakTo: Set<String> = emptySet(),
+    val tier: String? = null
 ) {
     fun has(tag: String): Boolean = tag in tags
 
@@ -82,7 +83,8 @@ class HeroDatabase(val heroes: List<Hero>) {
                         damage = DamageType.valueOf(o.optString("damage", "MIXED")),
                         tags = o.optJSONArray("tags").toStrings().toSet(),
                         counters = o.optJSONArray("counters").toStrings().toSet(),
-                        weakTo = o.optJSONArray("weakTo").toStrings().toSet()
+                        weakTo = o.optJSONArray("weakTo").toStrings().toSet(),
+                        tier = o.optString("tier").takeIf { it.isNotEmpty() }
                     )
                 )
             }
