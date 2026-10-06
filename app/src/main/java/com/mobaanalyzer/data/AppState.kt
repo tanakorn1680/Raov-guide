@@ -28,6 +28,9 @@ object AppState {
     @Synchronized fun getScreenReading(): ScreenReading? = currentReading
     @Synchronized fun getStateHistory(): List<GameState> = stateHistory.toList()
 
+    // HeroDatabase — set ครั้งเดียวตอน ScreenCaptureService เริ่ม
+    @Volatile var heroDb: HeroDatabase? = null
+
     @Volatile var lastStatusText: String = "ยังไม่เริ่ม"
         private set
 

@@ -99,6 +99,7 @@ class ScreenCaptureService : Service() {
             report("heroes.json อ่านไม่ได้: ${e.javaClass.simpleName} ${e.message}")
             HeroDatabase(emptyList())
         }
+        AppState.heroDb = db
         report("ScreenCaptureService เริ่มแล้ว (โหลดฮีโร่ ${db.heroes.size} ตัว)")
         screenReader = GameScreenReader(db)
         createChannel()
