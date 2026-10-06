@@ -11,11 +11,16 @@ import android.hardware.display.DisplayManager
 import android.os.*
 import android.util.Log
 import android.view.*
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.app.NotificationCompat
 import com.mobaanalyzer.MainActivity
 import com.mobaanalyzer.R
 import com.mobaanalyzer.data.AppState
+import com.mobaanalyzer.data.Hero
+import com.mobaanalyzer.engine.DraftPhase
+import com.mobaanalyzer.engine.PickAdvisor
+import com.mobaanalyzer.engine.Recommendation
 import com.mobaanalyzer.engine.ScreenState
 import com.mobaanalyzer.model.GamePhase
 import com.mobaanalyzer.model.GameState
@@ -60,6 +65,22 @@ class OverlayService : Service() {
     private var tvEnemies: TextView? = null
     private var tvTip:     TextView? = null
     private var tvDebug:   TextView? = null
+
+    // แถวคำแนะนำฮีโร่ (สร้างครั้งเดียว แล้วแค่เติมข้อมูล)
+    private var recContainer: LinearLayout? = null
+    private val recRows = ArrayList<RecRow>()
+    private val advisor = PickAdvisor()
+
+    private class RecRow(
+        val root: View,
+        val rank: TextView,
+        val name: TextView,
+        val score: TextView,
+        val fill: View,
+        val rest: View,
+        val detail: TextView,
+        val caution: TextView
+    )
 
     private var collapsed = true
     private var fx = 0.01f      // ตำแหน่งเป็นสัดส่วนของจอ (กันหลุดจอตอนหมุน)
@@ -131,6 +152,24 @@ class OverlayService : Service() {
         tvEnemies = v.findViewById(R.id.tvOverlayEnemies)
         tvTip     = v.findViewById(R.id.tvOverlayTip)
         tvDebug   = v.findViewById(R.id.tvOverlayDebug)
+        recContainer = v.findViewById(R.id.overlayRecContainer)
+        val inflater = LayoutInflater.from(this)
+        repeat(3) {
+            val row = inflater.inflate(R.layout.item_rec, recContainer, false)
+            recContainer?.addView(row)
+            recRows.add(
+                RecRow(
+                    row,
+                    row.findViewById(R.id.tvRecRank),
+                    row.findViewById(R.id.tvRecName),
+                    row.findViewById(R.id.tvRecScore),
+                    row.findViewById(R.id.recBarFill),
+                    row.findViewById(R.id.recBarRest),
+                    row.findViewById(R.id.tvRecDetail),
+                    row.findViewById(R.id.tvRecCaution)
+                )
+            )
+        }
 
         // ลากได้ทั้งก้อนกลม, หัวแผง และตัวแผง — แตะก้อนกลม = ขยาย, แตะหัวแผง = โชว์/ซ่อนบรรทัด debug
         bubble?.setOnTouchListener(DragListener(onTap = { setCollapsed(false) }))
@@ -320,19 +359,40 @@ class OverlayService : Service() {
         val allies      = reading?.allies?.map { it.name }  ?: emptyList()
         val enemies     = reading?.enemies?.map { it.name } ?: emptyList()
 
+        // คำแนะนำฮีโร่ (เฉพาะหน้า Draft ที่เห็นศัตรูอย่างน้อย 1 ตัว)
+        val allyHeroes:  List<Hero> = reading?.allies  ?: emptyList()
+        val enemyHeroes: List<Hero> = reading?.enemies ?: emptyList()
+        var recs: List<Recommendation> = emptyList()
+        var draftLine = "Ban / Pick"
+        if (screenState == ScreenState.DRAFT && enemies.isNotEmpty()) {
+            val db = AppState.heroDb
+            if (db != null) {
+                recs = advisor.recommend(allyHeroes, enemyHeroes, db.heroes, top = 3)
+                if (recs.isNotEmpty()) {
+                    val phase = advisor.draftPhase(allyHeroes, enemyHeroes)
+                    draftLine = "${phaseName(phase)} · ความมั่นใจ ${recs.first().scores.confidence}"
+                }
+            }
+        }
+
         tvPhase?.text = when (screenState) {
-            ScreenState.DRAFT   -> "Ban / Pick"
+            ScreenState.DRAFT   -> draftLine
             ScreenState.IN_GAME -> inGameLine(state)
             else                -> "กำลังอ่านหน้าจอ"
         }
         tvAllies?.text  = if (allies.isEmpty())  "—" else allies.joinToString(", ")
         tvEnemies?.text = if (enemies.isEmpty()) "—" else enemies.joinToString(", ")
 
-        tvTip?.text = when {
-            screenState == ScreenState.DRAFT && enemies.isNotEmpty() -> generatePickTip(reading?.allies ?: emptyList<com.mobaanalyzer.data.Hero>(), reading?.enemies ?: emptyList<com.mobaanalyzer.data.Hero>())
+        val message: String? = when {
+            recs.isNotEmpty()                                        -> null
+            screenState == ScreenState.DRAFT && enemies.isNotEmpty() -> "รอศัตรูเลือกเพิ่มเพื่อวิเคราะห์"
             screenState == ScreenState.IN_GAME                       -> generateGameTip(state)
             else                                                     -> "รอข้อมูลจากหน้าจอ"
         }
+        tvTip?.visibility = if (message == null) View.GONE else View.VISIBLE
+        tvTip?.text = message ?: ""
+        recContainer?.visibility = if (recs.isEmpty()) View.GONE else View.VISIBLE
+        for ((i, row) in recRows.withIndex()) bindRecRow(row, i, recs.getOrNull(i))
 
         val status  = AppState.lastStatusText
         val isError = status.contains("ไม่ได้") || status.contains("พัง")
@@ -361,33 +421,58 @@ class OverlayService : Service() {
         return listOfNotNull(phase, time, score).joinToString(" · ")
     }
 
-        private fun generatePickTip(allies: List<com.mobaanalyzer.data.Hero>, enemies: List<com.mobaanalyzer.data.Hero>): String {
-        val db      = AppState.heroDb ?: return "เลือกตัวที่ counter ศัตรูได้"
-        val advisor = com.mobaanalyzer.engine.PickAdvisor()
-        val phase   = advisor.draftPhase(allies, enemies)
-        val recs    = advisor.recommend(allies, enemies, db.heroes, top = 3)
+    private fun phaseName(p: DraftPhase): String = when (p) {
+        DraftPhase.BLIND -> "Blind Pick"
+        DraftPhase.EARLY -> "Early Draft"
+        DraftPhase.MID   -> "Mid Draft"
+        DraftPhase.LATE  -> "Late Draft"
+        DraftPhase.FINAL -> "Final Pick"
+    }
 
-        if (recs.isEmpty()) return when {
-            enemies.isEmpty() -> "💡 เริ่ม Draft — แนะนำ Blind Pick ที่ยืดหยุ่น"
-            else              -> "รอศัตรูเลือกเพิ่มเพื่อวิเคราะห์"
+    /** รวมเหตุผลสองข้อที่ขึ้นต้นด้วยคำเดียวกัน เช่น "แก้ทาง A" + "แก้ทาง B" → "แก้ทาง A, B" */
+    private fun compactReasons(reasons: List<String>): String {
+        val r = reasons.take(2)
+        if (r.size < 2) return r.joinToString("")
+        val head = r[0].substringBefore(' ', "")
+        if (head.isNotEmpty() && r[1].startsWith("$head ")) {
+            return r[0] + ", " + r[1].substring(head.length + 1)
         }
+        return r.joinToString(", ")
+    }
 
-        return buildString {
-            val phaseText = when (phase) {
-                com.mobaanalyzer.engine.DraftPhase.BLIND -> "Blind Pick"
-                com.mobaanalyzer.engine.DraftPhase.EARLY -> "Early Draft"
-                com.mobaanalyzer.engine.DraftPhase.MID   -> "Mid Draft"
-                com.mobaanalyzer.engine.DraftPhase.LATE  -> "Late Draft"
-                com.mobaanalyzer.engine.DraftPhase.FINAL -> "Final Pick"
-            }
-            appendLine("💡 $phaseText (ความมั่นใจ: ${recs.firstOrNull()?.scores?.confidence ?: "-"})")
-            for ((i, r) in recs.withIndex()) {
-                append("${i + 1}. ${r.hero.name}  ${r.scores.finalScore}")
-                appendLine("  [${r.scores.label}]")
-                if (r.reasons.isNotEmpty()) appendLine("   ✅ ${r.reasons.take(2).joinToString("  ")}")
-                if (r.avoidReasons.isNotEmpty()) appendLine("   ⚠️ ${r.avoidReasons.first()}")
-            }
-        }.trim()
+    private fun setWeight(v: View, weight: Float) {
+        val lp = v.layoutParams as? LinearLayout.LayoutParams ?: return
+        if (lp.weight != weight) {
+            lp.weight = weight
+            v.layoutParams = lp
+        }
+    }
+
+    /** เติมข้อมูลหนึ่งแถว: ลำดับ ชื่อ แถบคะแนน คะแนน เหตุผล (และข้อควรระวังถ้ามี) */
+    private fun bindRecRow(row: RecRow, index: Int, rec: Recommendation?) {
+        if (rec == null) {
+            row.root.visibility = View.GONE
+            return
+        }
+        row.root.visibility = View.VISIBLE
+        val score = rec.scores.finalScore.coerceIn(0, 100)
+        val top = index == 0
+
+        row.rank.text  = "${index + 1}"
+        row.name.text  = rec.hero.name
+        row.score.text = score.toString()
+        row.rank.setTextColor(if (top) colorOk else colorIdle)
+        row.fill.setBackgroundColor(if (top) colorOk else colorIdle)
+        setWeight(row.fill, score.toFloat())
+        setWeight(row.rest, (100 - score).toFloat())
+
+        val label   = rec.scores.label.removePrefix("Best ")
+        val reasons = compactReasons(rec.reasons)
+        row.detail.text = if (reasons.isEmpty()) label else "$label · $reasons"
+
+        val caution = rec.avoidReasons.firstOrNull()
+        row.caution.visibility = if (caution == null) View.GONE else View.VISIBLE
+        row.caution.text = if (caution == null) "" else "ระวัง · $caution"
     }
 
     private fun generateGameTip(state: GameState?): String {

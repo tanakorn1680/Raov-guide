@@ -7,7 +7,7 @@
     <!-- ===== Expanded panel ===== -->
     <LinearLayout
         android:id="@+id/overlayPanel"
-        android:layout_width="236dp"
+        android:layout_width="340dp"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:background="@drawable/bg_overlay_panel"
@@ -78,81 +78,104 @@
             android:layout_marginEnd="6dp"
             android:background="#1FFFFFFF" />
 
-        <!-- Allies -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="ทีมเรา"
-            android:textColor="#60A5FA"
-            android:textSize="10sp"
-            android:fontFamily="sans-serif-medium"
-            android:letterSpacing="0.08" />
-
-        <TextView
-            android:id="@+id/tvOverlayAllies"
+        <!-- Body: ทีม (ซ้าย) | คำแนะนำ (ขวา) -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:layout_marginEnd="6dp"
-            android:text="—"
-            android:textColor="#F3F4F6"
-            android:textSize="12sp"
-            android:maxLines="2"
-            android:ellipsize="end" />
+            android:orientation="horizontal">
 
-        <!-- Enemies -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="ศัตรู"
-            android:textColor="#F87171"
-            android:textSize="10sp"
-            android:fontFamily="sans-serif-medium"
-            android:letterSpacing="0.08" />
+            <LinearLayout
+                android:layout_width="104dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/tvOverlayEnemies"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:layout_marginEnd="6dp"
-            android:text="—"
-            android:textColor="#F3F4F6"
-            android:textSize="12sp"
-            android:maxLines="2"
-            android:ellipsize="end" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ทีมเรา"
+                    android:textColor="#60A5FA"
+                    android:textSize="10sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:letterSpacing="0.08" />
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginBottom="10dp"
-            android:layout_marginEnd="6dp"
-            android:background="#1FFFFFFF" />
+                <TextView
+                    android:id="@+id/tvOverlayAllies"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="—"
+                    android:textColor="#F3F4F6"
+                    android:textSize="11sp"
+                    android:maxLines="4"
+                    android:ellipsize="end" />
 
-        <!-- Tip -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="คำแนะนำ"
-            android:textColor="#9CA3AF"
-            android:textSize="10sp"
-            android:fontFamily="sans-serif-medium"
-            android:letterSpacing="0.08" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="ศัตรู"
+                    android:textColor="#F87171"
+                    android:textSize="10sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:letterSpacing="0.08" />
 
-        <TextView
-            android:id="@+id/tvOverlayTip"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:layout_marginEnd="6dp"
-            android:text="รอข้อมูลจากหน้าจอ"
-            android:textColor="#F3F4F6"
-            android:textSize="12sp"
-            android:maxLines="4"
-            android:ellipsize="end"
-            android:lineSpacingMultiplier="1.2" />
+                <TextView
+                    android:id="@+id/tvOverlayEnemies"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="—"
+                    android:textColor="#F3F4F6"
+                    android:textSize="11sp"
+                    android:maxLines="4"
+                    android:ellipsize="end" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:background="#1FFFFFFF" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="แนะนำ"
+                    android:textColor="#9CA3AF"
+                    android:textSize="10sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:letterSpacing="0.08" />
+
+                <!-- แถวฮีโร่แนะนำ (เพิ่มจากโค้ดตอนสร้าง overlay) -->
+                <LinearLayout
+                    android:id="@+id/overlayRecContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone" />
+
+                <!-- ข้อความสถานะเมื่อยังไม่มีคำแนะนำ -->
+                <TextView
+                    android:id="@+id/tvOverlayTip"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="รอข้อมูลจากหน้าจอ"
+                    android:textColor="#F3F4F6"
+                    android:textSize="12sp"
+                    android:maxLines="3"
+                    android:ellipsize="end"
+                    android:lineSpacingMultiplier="1.2" />
+            </LinearLayout>
+        </LinearLayout>
 
         <!-- Debug line (hidden by default; tap the header to show) -->
         <TextView
