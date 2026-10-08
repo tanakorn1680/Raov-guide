@@ -63,6 +63,9 @@ class HeroDbActivity : AppCompatActivity() {
         val db = AppState.heroDb ?: HeroDatabase.load(this)
         allHeroes = db.heroes.sortedBy { it.name }
 
+        // init cache ถ้ายังไม่ได้ init (กรณีเปิด HeroDb ก่อน start service)
+        HeroIconCache.initIfNeeded(applicationContext, db.heroes.map { it.id }.toSet())
+
         val localPatch = loadLocalPatch()
         tvPatchBadge.text = "แพทช์ $localPatch"
 
