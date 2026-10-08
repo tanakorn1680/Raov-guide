@@ -122,6 +122,16 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
+        <!-- Hero Database button -->
+        <Button
+            android:id="@+id/btnHeroDb"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginBottom="8dp"
+            android:text="📖 ฐานข้อมูลฮีโร่"
+            android:textSize="14sp"
+            android:backgroundTint="#1E293B" />
+
         <!-- Start/Stop button -->
         <Button
             android:id="@+id/btnStartStop"
