@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- แถวคำแนะนำฮีโร่ 1 แถว: ลำดับ | ชื่อ | แถบคะแนน | คะแนน  แล้วบรรทัดเหตุผลใต้ชื่อ -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="6dp"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/tvRecRank"
+            android:layout_width="14dp"
+            android:layout_height="wrap_content"
+            android:text="1"
+            android:textColor="#6B7280"
+            android:textSize="11sp"
+            android:fontFamily="sans-serif-medium" />
+
+        <TextView
+            android:id="@+id/tvRecName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="—"
+            android:textColor="#F3F4F6"
+            android:textSize="13sp"
+            android:fontFamily="sans-serif-medium"
+            android:maxLines="1"
+            android:ellipsize="end" />
+
+        <!-- แถบคะแนน: น้ำหนัก fill = คะแนน, rest = 100 - คะแนน -->
+        <LinearLayout
+            android:layout_width="44dp"
+            android:layout_height="4dp"
+            android:layout_marginStart="6dp"
+            android:layout_marginEnd="6dp"
+            android:orientation="horizontal"
+            android:background="#1FFFFFFF">
+
+            <View
+                android:id="@+id/recBarFill"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0"
+                android:background="#34D399" />
+
+            <View
+                android:id="@+id/recBarRest"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="100" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvRecScore"
+            android:layout_width="22dp"
+            android:layout_height="wrap_content"
+            android:gravity="end"
+            android:text="0"
+            android:textColor="#F3F4F6"
+            android:textSize="12sp"
+            android:fontFamily="sans-serif-medium" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvRecDetail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="14dp"
+        android:layout_marginTop="1dp"
+        android:textColor="#9CA3AF"
+        android:textSize="10sp"
+        android:maxLines="2"
+        android:ellipsize="end" />
+
+    <TextView
+        android:id="@+id/tvRecCaution"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="14dp"
+        android:textColor="#FBBF24"
+        android:textSize="10sp"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:visibility="gone" />
+</LinearLayout>
