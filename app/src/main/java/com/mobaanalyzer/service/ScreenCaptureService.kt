@@ -26,6 +26,7 @@ import com.mobaanalyzer.MainActivity
 import com.mobaanalyzer.R
 import com.mobaanalyzer.data.AppState
 import com.mobaanalyzer.data.HeroDatabase
+import com.mobaanalyzer.data.HeroIconCache
 import com.mobaanalyzer.engine.NormRect
 import com.mobaanalyzer.engine.ScreenReading
 import com.mobaanalyzer.engine.ScreenState
@@ -100,6 +101,11 @@ class ScreenCaptureService : Service() {
             HeroDatabase(emptyList())
         }
         AppState.heroDb = db
+        // เริ่ม icon cache — init sync (เร็ว) แล้ว prefetch ใน background
+        HeroIconCache.init(applicationContext, db.heroes.map { it.id }.toSet())
+        serviceScope.launch {
+            HeroIconCache.prefetchAll(db.heroes.map { it.id })
+        }
         report("ScreenCaptureService เริ่มแล้ว (โหลดฮีโร่ ${db.heroes.size} ตัว)")
         screenReader = GameScreenReader(db)
         createChannel()
