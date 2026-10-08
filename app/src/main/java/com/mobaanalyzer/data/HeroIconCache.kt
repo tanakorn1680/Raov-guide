@@ -32,6 +32,7 @@ object HeroIconCache {
 
     private lateinit var iconDir: File
     private lateinit var metaFile: File
+    private var initialized = false
 
     // heroId -> { url, etag?, lastModified? }
     private var meta: MutableMap<String, IconMeta> = mutableMapOf()
@@ -51,6 +52,12 @@ object HeroIconCache {
         urlMap = loadUrlMap(context)
         meta = loadMeta()
         pruneOrphans(knownHeroIds)
+        initialized = true
+    }
+
+    /** เรียกได้ทุกที่ — init เฉพาะครั้งแรกที่ยังไม่ได้ init */
+    fun initIfNeeded(context: Context, knownHeroIds: Set<String>) {
+        if (!initialized) init(context, knownHeroIds)
     }
 
     /**
