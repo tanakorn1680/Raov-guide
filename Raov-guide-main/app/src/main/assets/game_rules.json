@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "verified": false,
+  "note": "Tunable numbers. Objective times came from an Arena of Valor patch note and may differ on the ROV Thai server -- check them against the in-game timers once and edit here.",
+  "phases": { "earlyEndSec": 300, "midEndSec": 780 },
+  "scoreSwing": { "behindKills": 4, "aheadKills": 4 },
+  "deathWarn": 4,
+  "objectives": [
+    { "id": "dark_slayer", "label": "Dark Slayer", "firstSpawnSec": 480, "warnBeforeSec": 30 },
+    { "id": "abyssal_evolve", "label": "Abyssal Dragon (evolved)", "firstSpawnSec": 600, "warnBeforeSec": 30 }
+  ]
+}
