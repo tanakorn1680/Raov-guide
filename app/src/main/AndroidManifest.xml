@@ -86,6 +86,7 @@
             android:name=".receiver.AlarmReceiver"
             android:exported="false" />
 
+            <activity android:name=".ui.HeroDbActivity" android:label="ฐานข้อมูลฮีโร่" android:theme="@style/Theme.AppCompat.NoActionBar" />
     </application>
 
 </manifest>

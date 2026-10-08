@@ -22,6 +22,7 @@ import androidx.core.content.ContextCompat
 import com.mobaanalyzer.data.AppState
 import com.mobaanalyzer.model.GamePhase
 import com.mobaanalyzer.service.KeepAliveService
+import com.mobaanalyzer.ui.HeroDbActivity
 import com.mobaanalyzer.service.OverlayService
 import com.mobaanalyzer.service.ScreenCaptureService
 
@@ -97,6 +98,10 @@ class MainActivity : AppCompatActivity() {
 
         btnStartStop.setOnClickListener {
             if (isRunning) stopAll() else startAll()
+        }
+
+        findViewById<Button>(R.id.btnHeroDb).setOnClickListener {
+            startActivity(Intent(this, HeroDbActivity::class.java))
         }
 
         btnOverlayPerm.setOnClickListener {
