@@ -1,0 +1,55 @@
+name: Update Hero Database
+
+on:
+  schedule:
+    - cron: '0 3 * * 1'   # ทุกวันจันทร์ 03:00 UTC (~10:00 ไทย)
+  workflow_dispatch:        # กดรันมือได้
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Fetch HTML from rovmeta
+        run: python tools/fetch_rovmeta.py
+
+      - name: Parse HTML → heroes.json
+        run: python tools/parse_heroes.py
+          --html out/rovmeta_raw
+          --base data/heroes_base.json
+          --out  out/heroes.json
+
+      - name: Check for changes
+        id: diff
+        run: |
+          if git diff --quiet out/heroes.json 2>/dev/null; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit & push heroes.json
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add out/heroes.json
+          PATCH=$(python -c "import json; d=json.load(open('out/heroes.json')); print(d.get('patch','?'))")
+          git commit -m "Update heroes.json — patch $PATCH"
+          git push
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: heroes-json
+          path: out/heroes.json
+          retention-days: 30
