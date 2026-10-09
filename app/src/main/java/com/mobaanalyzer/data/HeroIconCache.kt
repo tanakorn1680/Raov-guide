@@ -71,13 +71,15 @@ object HeroIconCache {
         val cacheFile = File(iconDir, "$heroId.jpg")
         val existing = meta[heroId]
 
+        // custom icon — ใช้ cache ที่ user เลือกไว้ ไม่โหลดทับจากเน็ต
+        if (existing?.etag == "custom") return@withContext loadCached(heroId)
+
         return@withContext try {
             val conn = (URL(url).openConnection() as HttpURLConnection).apply {
                 connectTimeout = CONNECT_TIMEOUT
                 readTimeout = READ_TIMEOUT
                 setRequestProperty("User-Agent", "Mozilla/5.0 (Android)")
                 setRequestProperty("Referer", "https://rovmeta.com/")
-                // conditional request — ถามว่าเปลี่ยนไหม ไม่ต้องโหลดทั้งไฟล์ถ้าเหมือนเดิม
                 existing?.etag?.let { setRequestProperty("If-None-Match", it) }
                 existing?.lastModified?.let { setRequestProperty("If-Modified-Since", it) }
             }
@@ -127,6 +129,24 @@ object HeroIconCache {
 
     fun isCached(heroId: String) = File(iconDir, "$heroId.jpg").let { it.exists() && it.length() > 0 }
     fun cachedCount() = iconDir.listFiles { f -> f.name.endsWith(".jpg") }?.size ?: 0
+
+    /** บันทึก icon ที่ user เลือกเอง — ทับ cache เดิม และ mark ว่าเป็น custom */
+    fun saveCustomIcon(heroId: String, bitmap: Bitmap) {
+        val scaled = Bitmap.createScaledBitmap(bitmap, 128, 128, true)
+        File(iconDir, "$heroId.jpg").outputStream().use {
+            scaled.compress(Bitmap.CompressFormat.JPEG, 90, it)
+        }
+        // เก็บ flag ว่า custom ไว้ใน meta เพื่อไม่ให้ prefetch ทับ
+        meta[heroId] = (meta[heroId] ?: IconMeta(url = "")).copy(etag = "custom")
+        saveMeta()
+    }
+
+    /** ลบ custom icon — ครั้งต่อไปที่ getIcon จะโหลดจากเน็ตใหม่ */
+    fun clearCustomIcon(heroId: String) {
+        File(iconDir, "$heroId.jpg").delete()
+        meta.remove(heroId)
+        saveMeta()
+    }
 
     // ── private ────────────────────────────────────────────────────────────────
 
