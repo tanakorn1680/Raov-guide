@@ -235,7 +235,12 @@ class HeroDbActivity : AppCompatActivity() {
                     HeroIconCache.getIcon(hero.id)?.let { ivIcon.setImageBitmap(it) }
                 }
 
-                itemView.setOnClickListener { /* detail screen — เพิ่มทีหลัง */ }
+                itemView.setOnClickListener {
+                    startActivity(
+                        Intent(this@HeroDbActivity, HeroDetailActivity::class.java)
+                            .putExtra(HeroDetailActivity.EXTRA_HERO_ID, hero.id)
+                    )
+                }
             }
         }
     }
